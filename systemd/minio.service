@@ -1,0 +1,16 @@
+[Unit]
+Description=MinIO S3-compatible object storage (records)
+After=network.target
+
+[Service]
+Type=simple
+User=minio
+Group=minio
+EnvironmentFile=/srv/minio/.env
+ExecStart=/usr/local/bin/minio server /srv/minio-data --console-address "127.0.0.1:9001" --address "127.0.0.1:9000"
+Restart=always
+RestartSec=5
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
