@@ -23,6 +23,14 @@ services:
           memory: 512M
         reservations:
           memory: 128M
+    healthcheck:
+      # Docker healthcheck is kept minimal; real HTTP health gating is done
+      # by nginx-microservice using /minio/health/live from the registry.
+      test: ["CMD", "true"]
+      interval: 30s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
 volumes:
   minio-data:
