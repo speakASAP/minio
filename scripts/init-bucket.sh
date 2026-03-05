@@ -16,8 +16,26 @@ if [ ! -f "$ENV_FILE" ]; then
     exit 1
 fi
 
-# shellcheck source=/dev/null
-source "$ENV_FILE"
+# Load .env without sourcing (safe for passwords with ), $, ", etc.)
+while IFS= read -r line || [ -n "$line" ]; do
+    line="${line%$'\r'}"
+    line="${line%%#*}"
+    line="${line%"${line##*[![:space:]]}"}"
+    line="${line#"${line%%[![:space:]]*}"}"
+    [[ -z "$line" ]] && continue
+    if [[ "$line" == *=* ]]; then
+        key="${line%%=*}"
+        key="${key%"${key##*[![:space:]]}"}"
+        val="${line#*=}"
+        val="${val#"${val%%[![:space:]]*}"}"
+        val="${val%"${val##*[![:space:]]}"}"
+        val="${val%$'\r'}"
+        if [[ "$val" == \"*\" ]]; then val="${val%\"}"; val="${val#\"}"; fi
+        if [[ "$val" == \'*\' ]]; then val="${val%\'}"; val="${val#\'}"; fi
+        printf -v "$key" %s "$val"
+        export "$key"
+    fi
+done < "$ENV_FILE"
 
 BUCKET="${RECORDS_BUCKET:-records}"
 ALIAS=minio-local
@@ -29,18 +47,29 @@ if [ -z "$MINIO_ROOT_USER" ] || [ -z "$MINIO_ROOT_PASSWORD" ]; then
     exit 1
 fi
 
-if ! command -v mc >/dev/null 2>&1; then
-    echo "Error: MinIO Client (mc) not found. Install: https://min.io/docs/minio/linux/reference/minio-mc.html"
+# Prefer MinIO Client over Midnight Commander (both use 'mc'). Use minio-mc or verify mc is MinIO.
+MC_CMD=""
+if command -v minio-mc >/dev/null 2>&1; then
+    MC_CMD=minio-mc
+elif command -v mc >/dev/null 2>&1; then
+    if mc --version 2>&1 | grep -qi minio; then
+        MC_CMD=mc
+    fi
+fi
+if [ -z "$MC_CMD" ]; then
+    echo "Error: MinIO Client not found. Install from https://min.io/docs/minio/linux/reference/minio-mc.html"
+    echo "  Install as 'minio-mc' to avoid conflict with Midnight Commander:"
+    echo "  wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/minio-mc && chmod +x /usr/local/bin/minio-mc"
     exit 1
 fi
 
 echo "[minio] Configuring mc alias ${ALIAS}..."
-mc alias set "${ALIAS}" "${ENDPOINT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
+"$MC_CMD" alias set "${ALIAS}" "${ENDPOINT}" "${MINIO_ROOT_USER}" "${MINIO_ROOT_PASSWORD}"
 
 echo "[minio] Creating bucket ${BUCKET}..."
-mc mb "${ALIAS}/${BUCKET}" --ignore-existing 2>/dev/null || true
+"$MC_CMD" mb "${ALIAS}/${BUCKET}" --ignore-existing 2>/dev/null || true
 
 echo "[minio] Disabling public access on bucket ${BUCKET}..."
-mc anonymous set none "${ALIAS}/${BUCKET}" 2>/dev/null || true
+"$MC_CMD" anonymous set none "${ALIAS}/${BUCKET}" 2>/dev/null || true
 
 echo "[minio] Bucket ${BUCKET} is ready. All access via presigned URLs or IAM only."

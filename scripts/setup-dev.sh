@@ -32,6 +32,10 @@ if [ ! -f "${INSTALL_DIR}/.env" ]; then
     echo "[minio] No ${INSTALL_DIR}/.env found. Copy .env.example to .env and set MINIO_ROOT_USER, MINIO_ROOT_PASSWORD."
     cp -a "${REPO_ROOT}/.env.example" "${INSTALL_DIR}/.env"
 fi
+# Ensure Unix line endings (no CRLF) so MinIO and init-bucket.sh use the same credentials
+if [ -f "${INSTALL_DIR}/.env" ]; then
+    sed -i 's/\r$//' "${INSTALL_DIR}/.env"
+fi
 
 echo "[minio] Installing systemd unit..."
 cp "${REPO_ROOT}/systemd/minio.service" /etc/systemd/system/minio.service
