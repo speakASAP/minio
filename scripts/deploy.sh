@@ -51,7 +51,7 @@ if [ -d ".git" ]; then
 fi
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║           MinIO Microservice - Production Deployment      ║${NC}"
+echo -e "${BLUE}║           MinIO Microservice - Production Deployment       ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -111,7 +111,7 @@ cd "$NGINX_MICROSERVICE_PATH"
 if "$DEPLOY_SCRIPT" "$SERVICE_NAME"; then
     echo ""
     echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${GREEN}║          ✅ Deployment completed successfully!             ║${NC}"
+    echo -e "${GREEN}║      ✅ MinIO deployment completed successfully!           ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "MinIO microservice has been deployed using blue/green deployment."
@@ -122,7 +122,7 @@ if "$DEPLOY_SCRIPT" "$SERVICE_NAME"; then
 else
     echo ""
     echo -e "${RED}╔════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${RED}║                    ❌ Deployment failed!                   ║${NC}"
+    echo -e "${RED}║                  ❌ MinIO Deployment failed!               ║${NC}"
     echo -e "${RED}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo "Please check the error messages above and:"
