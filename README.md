@@ -15,7 +15,50 @@ MinIO runs on dev only. Not deployed via statex nginx-microservice blue/green (n
 ### Prerequisites
 
 * Dev server: 85.163.140.109, Nginx installed.
-* MinIO binary or Docker (see below).
+* MinIO binary at `/usr/local/bin/minio` (setup-dev.sh warns if missing; install manually).
+* MinIO Client for init-bucket.sh: <https://min.io/docs/minio/linux/reference/minio-mc.html>  
+  If the system has Midnight Commander (package `mc`), install the MinIO client as `minio-mc` to avoid conflict:  
+  `wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/minio-mc && chmod +x /usr/local/bin/minio-mc`
+
+### Initial deployment (first time)
+
+Run on **dev server** in this order:
+
+1. **Setup** (user, dirs, systemd, .env):
+
+   ```bash
+   cd /path/to/minio
+   sudo scripts/setup-dev.sh
+   ```
+
+2. **Install MinIO binary** if not present (setup-dev.sh will warn):
+
+   ```bash
+   sudo wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
+   sudo chmod +x /usr/local/bin/minio
+   sudo chown minio:minio /usr/local/bin/minio
+   ```
+
+3. **Set credentials** in `/srv/minio/.env` (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD).
+
+4. **Enable and start MinIO**:
+
+   ```bash
+   sudo systemctl enable minio
+   sudo systemctl start minio
+   sudo systemctl status minio
+   ```
+
+5. **Create bucket** (requires MinIO Client as `mc` or `minio-mc`, and .env with credentials):
+
+   ```bash
+   cd /path/to/minio
+   ./scripts/init-bucket.sh
+   ```
+
+6. **Optional – Nginx (dev)**: add snippet from `nginx/minio.conf` so API is reachable via HTTPS (e.g. `https://<dev-domain>/minio/` or `https://minio.<dev-domain>`).
+
+7. **Optional – deploy.sh**: only if MinIO is later added to nginx-microservice on statex (per this README, MinIO runs on dev only; deploy.sh is for blue/green on statex).
 
 ### 1. Run MinIO (systemd)
 
@@ -52,6 +95,7 @@ Creates bucket `records`, disables public access. All access via presigned URLs 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
 * On dev: copy to `.env` and set MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (strong).
 * Prod (speakasap-portal): set S3 endpoint URL, bucket, access key, secret key in portal `.env` (see speakasap-portal docs).
+* If init-bucket.sh reports "signature does not match": use the same credentials as the MinIO server (systemd uses `/srv/minio/.env`). Ensure `.env` has Unix line endings (LF, not CRLF).
 
 ## Access
 
