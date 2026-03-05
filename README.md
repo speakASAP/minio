@@ -16,7 +16,7 @@ MinIO runs on dev only. Not deployed via statex nginx-microservice blue/green (n
 
 * Dev server: 85.163.140.109, Nginx installed.
 * MinIO binary at `/usr/local/bin/minio` (setup-dev.sh warns if missing; install manually).
-* MinIO Client for init-bucket.sh: <https://min.io/docs/minio/linux/reference/minio-mc.html>  
+* MinIO Client (`minio-mc`) for init-bucket.sh: <https://min.io/docs/minio/linux/reference/minio-mc.html>  
   If the system has Midnight Commander (package `mc`), install the MinIO client as `minio-mc` to avoid conflict:  
   `wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/minio-mc && chmod +x /usr/local/bin/minio-mc`
 
@@ -49,7 +49,7 @@ Run on **dev server** in this order:
    sudo systemctl status minio
    ```
 
-5. **Create bucket** (requires MinIO Client as `mc` or `minio-mc`, and .env with credentials):
+5. **Create bucket** (requires MinIO Client as `minio-mc` (preferred) or `mc` when it is the MinIO client, and .env with credentials):
 
    ```bash
    cd /path/to/minio

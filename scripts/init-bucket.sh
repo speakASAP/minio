@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create bucket 'records' and disable public access.
-# Run on dev after MinIO is running. Requires: mc (MinIO Client), .env with MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET.
+# Run on dev after MinIO is running. Requires: minio-mc (MinIO Client), .env with MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET.
 
 set -e
 
