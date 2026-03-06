@@ -56,7 +56,7 @@ Run on **dev server** in this order:
    ./scripts/init-bucket.sh
    ```
 
-6. **Optional – Nginx (dev)**: add snippet from `nginx/minio.conf` so API is reachable via HTTPS (e.g. `https://<dev-domain>/minio/` or `https://minio.<dev-domain>`).
+6. **Optional – Nginx (dev)**: when MinIO is behind nginx-microservice, `nginx/nginx-api-routes.conf` must list both `/minio/` and `/` so path-style S3 (PUT `/records/...`) is proxied. After changing it, redeploy: `./nginx-microservice/scripts/blue-green/deploy-smart.sh minio-microservice`.
 
 7. **Optional – deploy.sh**: only if MinIO is later added to nginx-microservice on statex (per this README, MinIO runs on dev only; deploy.sh is for blue/green on statex).
 
