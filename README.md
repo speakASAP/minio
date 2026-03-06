@@ -90,6 +90,17 @@ Enable HTTPS using existing certificate process on dev.
 
 Creates bucket `records`, disables public access. All access via presigned URLs from prod.
 
+### 4. Check MinIO (diagnose AllAccessDisabled / 500)
+
+```bash
+# On dev
+ssh dev
+cd minio-microservice
+./scripts/check-minio.sh
+```
+
+Verifies: MinIO process or Docker, port 9000, .env keys, bucket list, anonymous policy, and a test PUT. If test PUT fails, fix bucket policy or credentials so the portal can upload.
+
 ## Configuration
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
