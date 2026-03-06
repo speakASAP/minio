@@ -95,11 +95,21 @@ Creates bucket `records`, disables public access. All access via presigned URLs 
 ```bash
 # On dev
 ssh dev
-cd minio-microservice
+cd minio-microservice   # or cd /home/ssf/Documents/Github/minio-microservice
 ./scripts/check-minio.sh
 ```
 
 Verifies: MinIO process or Docker, port 9000, .env keys, bucket list, anonymous policy, and a test PUT. If test PUT fails, fix bucket policy or credentials so the portal can upload.
+
+### 5. Diagnose 520 / Nginx / certificates on dev
+
+```bash
+ssh dev
+cd /home/ssf/Documents/Github/minio-microservice
+./scripts/diagnose-minio-dev.sh
+```
+
+Runs: MinIO status, direct PUT to MinIO (127.0.0.1:9000), Nginx config grep, PUT via Nginx with Host header, HTTPS PUT to the MinIO hostname, SSL cert check, last Nginx errors. Use this when prod gets 520 or Method Not Allowed to see if the issue is MinIO, Nginx proxy, or SSL on dev.
 
 ## Configuration
 
