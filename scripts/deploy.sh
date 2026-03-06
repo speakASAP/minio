@@ -102,6 +102,19 @@ echo -e "${GREEN}✅ Found nginx-microservice at: $NGINX_MICROSERVICE_PATH${NC}"
 echo -e "${GREEN}✅ Deploying service: $SERVICE_NAME${NC}"
 echo ""
 
+# Remove existing minio nginx configs so deploy-smart.sh regenerates them from current
+# nginx-api-routes.conf (ensures location / and location /minio/ are both present).
+MINIO_DOMAIN="minio.alfares.cz"
+BLUE_GREEN_DIR="$NGINX_MICROSERVICE_PATH/nginx/conf.d/blue-green"
+STAGING_DIR="$NGINX_MICROSERVICE_PATH/nginx/conf.d/staging"
+for f in "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.blue.conf" "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.green.conf" \
+         "$STAGING_DIR/${MINIO_DOMAIN}.blue.conf" "$STAGING_DIR/${MINIO_DOMAIN}.green.conf"; do
+    if [ -f "$f" ]; then
+        rm -f "$f"
+        echo -e "${BLUE}Removed $f so config will be regenerated${NC}"
+    fi
+done
+
 # Change to nginx-microservice directory and run deployment
 echo -e "${YELLOW}Starting blue/green deployment...${NC}"
 echo ""
