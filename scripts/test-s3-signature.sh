@@ -105,23 +105,22 @@ else
     export S3_ACCESS_KEY="$MINIO_ROOT_USER"
     export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
     export S3_BUCKET="$RECORDS_BUCKET"
+    export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
     if [ -n "$USE_DOCKER" ]; then
-        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
-            export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://nginx-microservice}"
-            export DOCKER_EXTRA_OPTS="--network nginx-network"
-        else
-            export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
+        NginxIP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nginx-microservice 2>/dev/null | head -1)
+        if [ -n "$NginxIP" ]; then
+            export DOCKER_EXTRA_OPTS="--network nginx-network --add-host=minio.alfares.cz:${NginxIP}"
         fi
-    else
-        export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
     fi
-    PYOUT=$(timeout 25 run_py 2>&1) || true
+    set +e
+    PYOUT=$(timeout 25 run_py 2>&1)
     PYEXIT=$?
+    set -e
     [ "$PYEXIT" = "124" ] && PYEXIT=1
     if [ "$PYEXIT" -eq 0 ]; then
         echo "  Via Nginx: OK"
     else
-        echo "  Via Nginx: SKIPPED (nginx/SSL not available in this env; run deploy.sh on server for full test)"
+        echo "  Via Nginx: SKIPPED (proxy or SSL not configured for this env - run deploy.sh on server for full test)"
         # Do not set FAILED=1 so script passes when direct test OK
     fi
     unset DOCKER_EXTRA_OPTS
