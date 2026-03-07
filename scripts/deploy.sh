@@ -181,6 +181,49 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
     TOTAL_DURATION_FORMATTED=$(awk "BEGIN {printf \"%.2f\", $TOTAL_DURATION}")
     print_phase_summary 2>&1
     echo ""
+
+    # Apply S3 SigV4-compatible proxy from minio.conf (Host $http_host, Authorization $http_authorization)
+    MINIO_CONF="$PROJECT_ROOT/nginx/minio.conf"
+    MINIO_INCLUDE_DST="$NGINX_MICROSERVICE_PATH/nginx/includes/minio-proxy-settings.conf"
+    if [ -f "$MINIO_CONF" ]; then
+        # Generate minio-proxy-settings.conf from minio.conf (single source of truth): extract proxy
+        # directives from first location block, then add timeouts/buffers as in common-proxy-settings
+        {
+            echo "# MinIO/S3 proxy settings (SigV4). Generated from nginx/minio.conf - do not edit here."
+            echo "# Proxy headers (S3 SigV4 compatible)"
+            awk '/^location \/ \{/,/^\}$/ {
+                if ($0 ~ /proxy_http_version|proxy_set_header|proxy_buffering|proxy_request_buffering|client_max_body_size/) print
+            }' "$MINIO_CONF"
+            echo "proxy_set_header Upgrade \$http_upgrade;"
+            echo "proxy_set_header Connection 'upgrade';"
+            echo "proxy_cache_bypass \$http_upgrade;"
+            echo ""
+            echo "# Proxy timeouts"
+            echo "proxy_connect_timeout 300s;"
+            echo "proxy_read_timeout 300s;"
+            echo "proxy_send_timeout 300s;"
+            echo ""
+            echo "# Proxy buffer settings"
+            echo "proxy_buffer_size 128k;"
+            echo "proxy_buffers 4 256k;"
+            echo "proxy_busy_buffers_size 256k;"
+        } > "$MINIO_INCLUDE_DST"
+        echo -e "${GREEN}✓ Generated minio-proxy-settings.conf from nginx/minio.conf (SigV4 Host/Authorization)${NC}"
+        for f in "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.blue.conf" "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.green.conf"; do
+            if [ -f "$f" ]; then
+                sed -i.bak 's|include /etc/nginx/includes/common-proxy-settings.conf|include /etc/nginx/includes/minio-proxy-settings.conf|g' "$f"
+                rm -f "${f}.bak"
+                echo -e "${GREEN}✓ Patched $(basename "$f") to use minio-proxy-settings.conf${NC}"
+            fi
+        done
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
+            docker exec nginx-microservice nginx -s reload 2>/dev/null && echo -e "${GREEN}✓ Nginx reloaded${NC}" || echo -e "${YELLOW}⚠ Nginx reload skipped or failed (reload manually if needed)${NC}"
+        fi
+    else
+        echo -e "${YELLOW}⚠ nginx/minio.conf not found at $MINIO_CONF${NC}"
+    fi
+    echo ""
+
     echo -e "${GREEN}╔════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║         ✅ MinIO deployment completed successfully!        ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════════════════════╝${NC}"
