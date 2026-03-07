@@ -111,6 +111,18 @@ cd /home/ssf/Documents/Github/minio-microservice
 
 Runs: MinIO status, direct PUT to MinIO (127.0.0.1:9000), Nginx config grep, PUT via Nginx with Host header, HTTPS PUT to the MinIO hostname, SSL cert check, last Nginx errors. Use this when prod gets 520 or Method Not Allowed to see if the issue is MinIO, Nginx proxy, or SSL on dev.
 
+### 6. Request diagnostics (SignatureDoesNotMatch, etc.)
+
+After reproducing an upload error from the portal, run on **dev** to see what MinIO and Nginx logged:
+
+```bash
+ssh dev
+cd /path/to/minio-microservice
+./scripts/log-request-diagnostics.sh
+```
+
+Shows: last 80 lines of MinIO container log, Nginx access log lines for minio.alfares.cz/records/, Nginx error log. Compare with portal logs: `grep RECORDS_S3 ~/speakasap-portal/logs/app.log` on **speakasap** (endpoint, path, secret_len). For SignatureDoesNotMatch, ensure Host and path at MinIO match what the portal used to sign.
+
 ## Configuration
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
