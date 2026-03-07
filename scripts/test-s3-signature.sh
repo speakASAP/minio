@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Test S3 SigV4 PUT (same as portal). Run on dev: ./scripts/test-s3-signature.sh
-# 1) PUT via endpoint (direct or through nginx), 2) show MinIO logs.
+# Test S3 SigV4 PUT + GET (same as portal). Run on dev: ./scripts/test-s3-signature.sh
+# 1) PUT then GET (two-way) via endpoint (direct or through nginx), 2) show MinIO logs.
 # Uses .venv in repo for boto3 if system python has no boto3.
 set -e
 
@@ -85,9 +85,10 @@ else
 fi
 unset DOCKER_NETWORK_OPT
 
-# Test 2: via Nginx (same path as portal from prod)
+# Test 2: via Nginx (same path as portal from prod). To use portal .env:
+#   ENV_FILE=/path/to/speakasap-portal/.env S3_ENDPOINT_URL=... S3_ACCESS_KEY=$RECORDS_S3_ACCESS_KEY S3_SECRET_KEY=$RECORDS_S3_SECRET_KEY ./scripts/test-s3-signature.sh
 echo ""
-echo "--- 2) PUT via Nginx (https://minio.alfares.cz, SigV4) ---"
+echo "--- 2) PUT + GET via Nginx (https://minio.alfares.cz, SigV4) ---"
 export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
 export S3_ACCESS_KEY="$MINIO_ROOT_USER"
 export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
