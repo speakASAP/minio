@@ -2,6 +2,8 @@
 
 S3-compatible object storage microservice for lesson records. Runs on **dev server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS.
 
+**Note:** The portal (speakasap) and MinIO are on **different servers**; they do not share an internal network. The portal must use the **public MinIO URL** (e.g. `https://minio.alfares.cz`), and all S3 traffic goes through the proxy. The proxy must forward `Host` and `Authorization` unchanged for S3 SigV4 (see `nginx/minio.conf` and deploy).
+
 ## Purpose
 
 * Replace NFS-based shared storage for course records with S3 API.
