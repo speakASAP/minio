@@ -123,21 +123,23 @@ cd /path/to/minio-microservice
 
 Shows: last 80 lines of MinIO container log, Nginx access log lines for minio.alfares.cz/records/, Nginx error log. Compare with portal logs: `grep RECORDS_S3 ~/speakasap-portal/logs/app.log` on **speakasap** (endpoint, path, secret_len). For SignatureDoesNotMatch, ensure Host and path at MinIO match what the portal used to sign.
 
-### 7. S3 SigV4 signature test
+### 7. S3 SigV4 signature test (PUT + GET)
 
-Run on **dev** to verify MinIO accepts SigV4 PUT (same as portal):
+Run after **redeploy** to verify two-way S3 (PUT then GET, same as portal):
 
 ```bash
-ssh dev
+# On dev (or prod host that can reach MinIO):
 cd /path/to/minio-microservice
 ./scripts/test-s3-signature.sh
 ```
 
-* **Test 1 (direct)**: PUT to `http://127.0.0.1:9000` with SigV4 and path-style. Expect: `Direct: OK` and MinIO logs show the request.
-* **Test 2 (via Nginx)**: PUT to `https://minio.alfares.cz`. If this fails, ensure nginx uses `proxy_set_header Host $http_host` and `proxy_set_header Authorization $http_authorization` (see `nginx/minio.conf`).
-* **Test 3**: Script prints last 30 lines of MinIO server logs. Use them to confirm the direct PUT was accepted.
+* **Test 1 (direct)**: PUT then GET to `http://127.0.0.1:9000` with SigV4 path-style. Expect: `PUT OK`, `GET OK`, `DELETE OK`, then `Direct: OK`. MinIO must be running (e.g. Docker).
+* **Test 2 (via Nginx)**: PUT then GET to `https://minio.alfares.cz`. Expect: `PUT OK`, `GET OK`, then `Via Nginx: OK`. If you see "authorization mechanism not supported", the proxy is altering/stripping the Authorization header; ensure nginx forwards `Host` and `Authorization` (see `nginx/minio.conf`).
+* **Test 3**: Last 30 lines of MinIO server logs (when MinIO runs in Docker or systemd).
 
-Uses system python3+boto3, or a venv, or Docker (python:3.11-slim) if boto3 is not installed.
+Optional: `S3_TEST_VERBOSE=1 ./scripts/test-s3-signature.sh` prints endpoint and bucket before each test. To use portal credentials: set `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET` from portal `.env` (RECORDS_S3_*) then run the script.
+
+Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (python:3.11-slim) if boto3 is not installed.
 
 ## Configuration
 

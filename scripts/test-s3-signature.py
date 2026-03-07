@@ -34,6 +34,9 @@ def main():
         print("ERROR: Set S3_ENDPOINT_URL, S3_ACCESS_KEY, S3_SECRET_KEY (or MINIO_ROOT_*)", file=sys.stderr)
         sys.exit(1)
 
+    if os.environ.get("S3_TEST_VERBOSE"):
+        print("endpoint=%s bucket=%s (SigV4 path-style)" % (endpoint, bucket), flush=True)
+
     cfg = Config(signature_version="s3v4", s3={"addressing_style": "path"})
     client = boto3.client(
         "s3",
