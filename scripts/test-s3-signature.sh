@@ -58,9 +58,11 @@ fi
 
 run_py() {
     local net_opt=""
+    local extra_opts=""
     [ -n "$DOCKER_NETWORK_OPT" ] && net_opt="$DOCKER_NETWORK_OPT"
+    [ -n "$DOCKER_EXTRA_OPTS" ] && extra_opts="$DOCKER_EXTRA_OPTS"
     if [ -n "$USE_DOCKER" ]; then
-        docker run --rm $net_opt \
+        docker run --rm $net_opt $extra_opts \
             -e S3_ENDPOINT_URL -e S3_ACCESS_KEY -e S3_SECRET_KEY -e S3_BUCKET \
             -v "$SCRIPT_DIR/test-s3-signature.py:/script.py:ro" \
             python:3.11-slim sh -c "pip install -q boto3 && python /script.py"
@@ -90,6 +92,7 @@ fi
 unset DOCKER_NETWORK_OPT
 
 # Test 2: via Nginx (same path as portal from prod). Skip if S3_TEST_SKIP_NGINX=1 (e.g. when endpoint not deployed).
+# When run in Docker and nginx-microservice exists, resolve minio.alfares.cz to nginx container to hit local nginx (bypass Cloudflare).
 # To use portal .env:
 #   ENV_FILE=/path/to/speakasap-portal/.env S3_ENDPOINT_URL=... S3_ACCESS_KEY=$RECORDS_S3_ACCESS_KEY S3_SECRET_KEY=$RECORDS_S3_SECRET_KEY ./scripts/test-s3-signature.sh
 echo ""
@@ -102,12 +105,19 @@ else
     export S3_ACCESS_KEY="$MINIO_ROOT_USER"
     export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
     export S3_BUCKET="$RECORDS_BUCKET"
+    if [ -n "$USE_DOCKER" ]; then
+        NginxIP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nginx-microservice 2>/dev/null | head -1)
+        if [ -n "$NginxIP" ]; then
+            export DOCKER_EXTRA_OPTS="--network nginx-network --add-host=minio.alfares.cz:${NginxIP}"
+        fi
+    fi
     if run_py 2>&1; then
         echo "  Via Nginx: OK"
     else
-        echo "  Via Nginx: FAILED (run ./scripts/deploy.sh on server hosting minio.alfares.cz so nginx uses minio-proxy-settings.conf)"
+        echo "  Via Nginx: FAILED (if behind Cloudflare, ensure it preserves Authorization)"
         FAILED=1
     fi
+    unset DOCKER_EXTRA_OPTS
 fi
 
 # Show MinIO logs (last 30 lines)
