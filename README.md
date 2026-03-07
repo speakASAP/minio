@@ -139,7 +139,7 @@ cd /path/to/minio-microservice
 * **Test 2 (via Nginx)**: PUT then GET to `https://minio.alfares.cz`. Expect: `PUT OK`, `GET OK`, then `Via Nginx: OK`. If you see "authorization mechanism not supported", the proxy is altering/stripping the Authorization header; ensure nginx forwards `Host` and `Authorization` (see `nginx/minio.conf`).
 * **Test 3**: Last 30 lines of MinIO server logs (when MinIO runs in Docker or systemd).
 
-Optional: `S3_TEST_VERBOSE=1 ./scripts/test-s3-signature.sh` prints endpoint and bucket before each test. To use portal credentials: set `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET` from portal `.env` (RECORDS_S3_*) then run the script.
+Optional: `S3_TEST_VERBOSE=1 ./scripts/test-s3-signature.sh` prints endpoint and bucket before each test. To use portal credentials: set `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET` from portal `.env` (RECORDS_S3_*) then run the script. To skip the Nginx test (e.g. local/CI when minio.alfares.cz is not deployed): `S3_TEST_SKIP_NGINX=1 ./scripts/test-s3-signature.sh`; the script exits 1 if any run test fails.
 
 Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (python:3.11-slim) if boto3 is not installed.
 

@@ -69,6 +69,9 @@ run_py() {
     fi
 }
 
+# Track failures so we exit 1 if any test that ran failed
+FAILED=0
+
 # Test 1: direct to MinIO (no nginx) - proves MinIO accepts SigV4
 echo ""
 echo "--- 1) PUT direct to MinIO (127.0.0.1:9000, SigV4) ---"
@@ -82,21 +85,29 @@ if run_py; then
     echo "  Direct: OK"
 else
     echo "  Direct: FAILED"
+    FAILED=1
 fi
 unset DOCKER_NETWORK_OPT
 
-# Test 2: via Nginx (same path as portal from prod). To use portal .env:
+# Test 2: via Nginx (same path as portal from prod). Skip if S3_TEST_SKIP_NGINX=1 (e.g. when endpoint not deployed).
+# To use portal .env:
 #   ENV_FILE=/path/to/speakasap-portal/.env S3_ENDPOINT_URL=... S3_ACCESS_KEY=$RECORDS_S3_ACCESS_KEY S3_SECRET_KEY=$RECORDS_S3_SECRET_KEY ./scripts/test-s3-signature.sh
 echo ""
-echo "--- 2) PUT + GET via Nginx (https://minio.alfares.cz, SigV4) ---"
-export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
-export S3_ACCESS_KEY="$MINIO_ROOT_USER"
-export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
-export S3_BUCKET="$RECORDS_BUCKET"
-if run_py 2>&1; then
-    echo "  Via Nginx: OK"
+if [ -n "$S3_TEST_SKIP_NGINX" ]; then
+    echo "--- 2) PUT + GET via Nginx (skipped, S3_TEST_SKIP_NGINX=1) ---"
+    echo "  Via Nginx: SKIPPED"
 else
-    echo "  Via Nginx: FAILED (check Host header and proxy_set_header Host \$http_host)"
+    echo "--- 2) PUT + GET via Nginx (https://minio.alfares.cz, SigV4) ---"
+    export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
+    export S3_ACCESS_KEY="$MINIO_ROOT_USER"
+    export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
+    export S3_BUCKET="$RECORDS_BUCKET"
+    if run_py 2>&1; then
+        echo "  Via Nginx: OK"
+    else
+        echo "  Via Nginx: FAILED (run ./scripts/deploy.sh on server hosting minio.alfares.cz so nginx uses minio-proxy-settings.conf)"
+        FAILED=1
+    fi
 fi
 
 # Show MinIO logs (last 30 lines)
@@ -111,4 +122,8 @@ else
 fi
 
 echo ""
-echo "=== Done ==="
+if [ "$FAILED" = "1" ]; then
+    echo "=== Done (FAILED) ==="
+    exit 1
+fi
+echo "=== Done (all tests passed) ==="
