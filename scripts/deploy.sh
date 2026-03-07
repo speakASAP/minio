@@ -212,8 +212,10 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
         for f in "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.blue.conf" "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.green.conf"; do
             if [ -f "$f" ]; then
                 sed -i.bak 's|include /etc/nginx/includes/common-proxy-settings.conf|include /etc/nginx/includes/minio-proxy-settings.conf|g' "$f"
+                # Allow local testing: S3_TEST_ENDPOINT=https://127.0.0.1 so Via Nginx test hits this host
+                sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
                 rm -f "${f}.bak"
-                echo -e "${GREEN}✓ Patched $(basename "$f") to use minio-proxy-settings.conf${NC}"
+                echo -e "${GREEN}✓ Patched $(basename "$f") to use minio-proxy-settings.conf and server_name 127.0.0.1${NC}"
             fi
         done
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then

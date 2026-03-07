@@ -114,7 +114,7 @@ else
     if run_py 2>&1; then
         echo "  Via Nginx: OK"
     else
-        echo "  Via Nginx: FAILED (if behind Cloudflare, ensure it preserves Authorization)"
+        echo "  Via Nginx: FAILED (run ./scripts/deploy.sh on server hosting minio.alfares.cz so nginx uses minio-proxy-settings.conf)"
         FAILED=1
     fi
     unset DOCKER_EXTRA_OPTS
