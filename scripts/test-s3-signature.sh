@@ -101,22 +101,25 @@ if [ -n "$S3_TEST_SKIP_NGINX" ]; then
     echo "--- 2) PUT + GET via Nginx (skipped, S3_TEST_SKIP_NGINX=1) ---"
     echo "  Via Nginx: SKIPPED"
 else
-    echo "--- 2) PUT + GET via Nginx (https://minio.alfares.cz, SigV4) ---"
-    export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
+    echo "--- 2) PUT + GET via Nginx (SigV4) ---"
     export S3_ACCESS_KEY="$MINIO_ROOT_USER"
     export S3_SECRET_KEY="$MINIO_ROOT_PASSWORD"
     export S3_BUCKET="$RECORDS_BUCKET"
     if [ -n "$USE_DOCKER" ]; then
-        NginxIP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nginx-microservice 2>/dev/null | head -1)
-        if [ -n "$NginxIP" ]; then
-            export DOCKER_EXTRA_OPTS="--network nginx-network --add-host=minio.alfares.cz:${NginxIP}"
+        if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
+            export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://nginx-microservice}"
+            export DOCKER_EXTRA_OPTS="--network nginx-network"
+        else
+            export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
         fi
+    else
+        export S3_ENDPOINT_URL="${S3_TEST_ENDPOINT:-https://minio.alfares.cz}"
     fi
-    PYOUT=$(run_py 2>&1); PYEXIT=$?
-    if [ "$PYEXIT" -eq 0 ]; then
+    if run_py 2>&1; then
         echo "  Via Nginx: OK"
     else
-        echo "  Via Nginx: SKIPPED (proxy/SSL not available in this environment; run deploy.sh on server for full test)"
+        echo "  Via Nginx: FAILED (if behind Cloudflare, ensure it preserves Authorization)"
+        FAILED=1
     fi
     unset DOCKER_EXTRA_OPTS
 fi
