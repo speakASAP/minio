@@ -129,8 +129,8 @@ done
 get_timestamp_seconds() { date +%s.%N; }
 PHASE_TIMING_FILE=$(mktemp /tmp/deploy-phases-XXXXXX)
 trap "rm -f $PHASE_TIMING_FILE" EXIT
-start_phase() { local n="$1" t=$(get_timestamp_seconds); echo "$n|START|$t" >> "$PHASE_TIMING_FILE"; echo -e "${YELLOW}⏱️  PHASE START: $n${NC}" >&2; echo -e "${YELLOW}⏱️  PHASE START: $n${NC}"; }
-end_phase() { local n="$1" t=$(get_timestamp_seconds); echo "$n|END|$t" >> "$PHASE_TIMING_FILE"; local sl=$(grep "^${n}|START|" "$PHASE_TIMING_FILE" | tail -1); if [ -n "$sl" ]; then local st=$(echo "$sl" | cut -d'|' -f3); local d=$(awk "BEGIN {printf \"%.2f\", $t - $st}"); echo -e "${GREEN}⏱️  PHASE END: $n (duration: ${d}s)${NC}" >&2; echo -e "${GREEN}⏱️  PHASE END: $n (duration: ${d}s)${NC}"; fi; }
+start_phase() { local n="$1" t=$(get_timestamp_seconds); echo "$n|START|$t" >> "$PHASE_TIMING_FILE"; echo -e "${YELLOW}⏱️  PHASE START: $n${NC}" >&2; }
+end_phase() { local n="$1" t=$(get_timestamp_seconds); echo "$n|END|$t" >> "$PHASE_TIMING_FILE"; local sl=$(grep "^${n}|START|" "$PHASE_TIMING_FILE" | tail -1); if [ -n "$sl" ]; then local st=$(echo "$sl" | cut -d'|' -f3); local d=$(awk "BEGIN {printf \"%.2f\", $t - $st}"); echo -e "${GREEN}⏱️  PHASE END: $n (duration: ${d}s)${NC}" >&2; fi; }
 print_phase_summary() {
     if [ ! -f "$PHASE_TIMING_FILE" ] || [ ! -s "$PHASE_TIMING_FILE" ]; then echo ""; echo -e "${YELLOW}⚠️  No phase timing data available${NC}"; echo ""; return; fi
     echo ""; echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"; echo -e "${BLUE}📊 DEPLOYMENT PHASE TIMING SUMMARY${NC}"; echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
