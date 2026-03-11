@@ -211,11 +211,14 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
         echo -e "${GREEN}✓ Generated minio-proxy-settings.conf from nginx/minio.conf (SigV4 Host/Authorization)${NC}"
         for f in "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.blue.conf" "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.green.conf"; do
             if [ -f "$f" ]; then
+                # Use MinIO-specific proxy settings include (SigV4‑safe headers).
                 sed -i.bak 's|include /etc/nginx/includes/common-proxy-settings.conf|include /etc/nginx/includes/minio-proxy-settings.conf|g' "$f"
-                # Allow local testing: S3_TEST_ENDPOINT=https://127.0.0.1 so Via Nginx test hits this host
+                # Ensure root S3 location does NOT rewrite the URI (no trailing slash on proxy_pass).
+                sed -i.bak 's|proxy_pass http://\$TARGET_UPSTREAM/;|proxy_pass http://$TARGET_UPSTREAM;|g' "$f"
+                # Allow local HTTPS checks from the host itself.
                 sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
                 rm -f "${f}.bak"
-                echo -e "${GREEN}✓ Patched $(basename "$f") to use minio-proxy-settings.conf and server_name 127.0.0.1${NC}"
+                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name)${NC}"
             fi
         done
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
