@@ -12,7 +12,7 @@ S3-compatible object storage microservice for lesson records. Runs on **dev serv
 
 ## Deployment (Dev Server)
 
-MinIO runs on dev only as the backing store for lesson records. nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`). The deploy script patches the generated nginx config so that `minio.alfares.cz` proxies to **host systemd MinIO** at `host.docker.internal:9000` (not the MinIO Docker container). The nginx container must resolve `host.docker.internal` (e.g. run with `--add-host=host.docker.internal:host-gateway` or set `extra_hosts: - "host.docker.internal:host-gateway"` in its compose).
+MinIO runs on dev only as the backing store for lesson records. nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`) using the standard blue/green deployment flow and the MinIO Docker container as defined in `docker-compose.blue.yml` / `docker-compose.green.yml`. The proxy and upstream container mapping are managed entirely by nginx-microservice deployment scripts; no direct host-specific upstreams (such as `host.docker.internal`) are required.
 
 ### Prerequisites
 
@@ -173,7 +173,7 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 ## Security
 
-* MinIO listens on 127.0.0.1 only; external access is only via nginx-microservice on `https://minio.alfares.cz`.
+* MinIO listens on 127.0.0.1 only; external access is only via nginx-microservice / Cloudflare on `https://minio.alfares.cz`.
 * Bucket `speakasap-records` is private; no anonymous read.
 * Presigned URL expiration ≤ 24 hours (configured in portal).
 * Store MINIO_ROOT_USER / MINIO_ROOT_PASSWORD and portal S3 keys in env only; never commit.
@@ -188,3 +188,38 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 * Follows project README/CREATE_SERVICE conventions: README, docs/, .env.example, scripts.
 * No service-registry on statex (service lives on dev).
 * Logging: use central logging from applications that call MinIO (e.g. speakasap-portal); MinIO itself logs to systemd/journal.
+
+## Troubleshooting uploads from speakasap-portal
+
+If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling `PutObject` to `https://minio.alfares.cz`:
+
+1. **Verify bucket and credentials directly from dev:**
+
+   ```bash
+   ssh dev
+   cd /home/ssf/Documents/Github/minio-microservice
+   ./scripts/test-s3-signature.sh
+   ```
+
+   * Test 1 must show `PUT OK` / `GET OK` against `http://127.0.0.1:9000` and bucket `speakasap-records`.
+
+2. **Run request diagnostics after reproducing the error from the portal:**
+
+   ```bash
+   ssh dev
+   cd /home/ssf/Documents/Github/minio-microservice
+   ./scripts/log-request-diagnostics.sh
+   ```
+
+   * Check MinIO logs for the exact bucket/key and error code.
+   * Confirm that nginx is forwarding `Host` and `Authorization` unchanged and that the request reaches the MinIO instance backing `speakasap-records`.
+
+3. **On the portal host (`speakasap`), re-run the verification helper:**
+
+   ```bash
+   ssh speakasap
+   cd /home/portal_db/speakasap-portal
+   python3 scripts/verify_s3_records_upload.py
+   ```
+
+   * When correctly configured, this should return HTTP 200 from the helper and a successful `head_object` on the same bucket/key in MinIO.
