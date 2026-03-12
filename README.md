@@ -1,18 +1,18 @@
 # MinIO Microservice (Records Storage)
 
-S3-compatible object storage microservice for lesson records. Runs on **dev server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS.
+S3-compatible object storage microservice for lesson records. Runs on **dev server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS. MinIO stores lesson MP3s in a bucket that points to the existing copied data under `/srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3` on dev (no NFS dependency).
 
 **Note:** The portal (speakasap) and MinIO are on **different servers**; they do not share an internal network. The portal must use the **public MinIO URL** (e.g. `https://minio.alfares.cz`), and all S3 traffic goes through the proxy. The proxy must forward `Host` and `Authorization` unchanged for S3 SigV4 (see `nginx/minio.conf` and deploy).
 
 ## Purpose
 
 * Replace NFS-based shared storage for course records with S3 API.
-* Bucket: `records`. Object key: `YYYY/MM/DD/lesson_UUID.mp3`.
+* Bucket: `RECORDS_BUCKET` (currently `speakasap-records`). Object key: `YYYY/MM/DD/lesson_UUID.mp3`.
 * Prod uploads via S3 PUT; playback via presigned GET URLs (no file streaming on prod).
 
 ## Deployment (Dev Server)
 
-MinIO runs on dev only. Not deployed via statex nginx-microservice blue/green (no Docker on statex for this service).
+MinIO runs on dev only as the backing store for lesson records. statex/nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`).
 
 ### Prerequisites
 
@@ -72,7 +72,17 @@ sudo systemctl start minio
 sudo systemctl status minio
 ```
 
-MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies. MinIO data dir is **`/var/lib/minio-data`** (systemd and Docker). Object keys are `YYYY/MM/DD/lesson_<uuid>.mp3`, so files are at `/var/lib/minio-data/records/YYYY/MM/DD/lesson_<uuid>.mp3`. To expose them under **`/srv/speakasap-records/YYYY/MM/DD/`**, bind mount after creating the bucket: `mount --bind /var/lib/minio-data/records /srv/speakasap-records` (add to fstab for boot).
+MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies. MinIO data dir is **`/srv/minio-data`** (systemd and Docker). The bucket directory for lesson records is configured to point at the existing copy under `/srv/speakasap-records` via symlink:
+
+```bash
+# On dev (after creating /srv/speakasap-records and copying NFS data there):
+sudo ln -s /srv/speakasap-records /srv/minio-data/speakasap-records
+```
+
+With `RECORDS_BUCKET=speakasap-records` and object keys `YYYY/MM/DD/lesson_<uuid>.mp3`, files are at:
+
+* `/srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3` on dev (canonical copy)
+* Exposed via S3 as `speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`.
 
 ### 2. Nginx (dev)
 
@@ -90,7 +100,7 @@ Enable HTTPS using existing certificate process on dev.
 ./scripts/init-bucket.sh
 ```
 
-Creates bucket `records`, disables public access. All access via presigned URLs from prod.
+Creates bucket `${RECORDS_BUCKET}` (defaults to `speakasap-records` when using `/srv/minio/.env`), disables public access. All access via presigned URLs from prod.
 
 ### 4. Check MinIO (diagnose AllAccessDisabled / 500)
 
@@ -147,7 +157,13 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
 * On dev: copy to `.env` and set MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (strong).
-* Prod (speakasap-portal): set S3 endpoint URL, bucket, access key, secret key in portal `.env` (see speakasap-portal docs).
+* Prod (speakasap-portal): set S3 endpoint URL, bucket, access key, secret key in portal `.env` (see speakasap-portal docs). Currently:
+
+  ```env
+  RECORDS_S3_ENDPOINT_URL=https://minio.alfares.cz/minio/
+  RECORDS_S3_BUCKET=speakasap-records
+  ```
+
 * If init-bucket.sh reports "signature does not match": use the same credentials as the MinIO server (systemd uses `/srv/minio/.env`). Ensure `.env` has Unix line endings (LF, not CRLF).
 
 ## Access

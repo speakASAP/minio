@@ -34,9 +34,9 @@ Ubuntu 16 – legacy system.
 
 ## Dev
 
-Public IP: 85.163.140.109
-Current storage path: `/srv/speakasap-records`
-Access: `ssh dev`
+Public IP: 85.163.140.109  
+Current storage path for copied lesson records: `/srv/speakasap-records` (years/ months/ days/ `lesson_<uuid>.mp3`, ~2 TB copied from NFS).  
+Access: `ssh dev`  
 Nginx already installed. Dev is capable of hosting additional microservice.
 
 ---
@@ -44,7 +44,7 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 # TARGET ARCHITECTURE
 
 * MinIO runs as separate microservice on dev.
-* Bucket: `records`
+* Bucket: `RECORDS_BUCKET` (currently `speakasap-records`).
 * Object key: `YYYY/MM/DD/lesson_UUID.mp3` (e.g. `2026/03/04/lesson_05e290d8-87b0-48d8-860c-cb6ace4e5d51.mp3`)
 * Prod: PUT object + generate presigned GET URL only. No NFS, no shared filesystem.
 
@@ -61,10 +61,17 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 ## 2. Deploy MinIO on dev
 
-* [ ] Create `/var/lib/minio-data` on dev; create system user `minio`, `chown -R minio:minio /var/lib/minio-data`
-* [ ] Systemd service: bind 127.0.0.1:9000, `minio server /var/lib/minio-data --console-address ":9001"`
-* [ ] After bucket `records` exists: bind mount so files appear at `/srv/speakasap-records/YYYY/MM/DD/`: `mount --bind /var/lib/minio-data/records /srv/speakasap-records` and add to fstab
-* [ ] Strong MINIO_ROOT_USER and MINIO_ROOT_PASSWORD in env
+* [x] Create `/srv/minio-data` on dev; create system user `minio`, `chown -R minio:minio /srv/minio-data`
+* [x] Systemd service: bind 127.0.0.1:9000, `minio server /srv/minio-data --console-address ":9001"`
+* [x] Point MinIO bucket dir at existing copied data without moving bytes:
+
+  ```bash
+  # Existing data from NFS copy:
+  #   /srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3
+  #
+  # Expose it to MinIO as bucket 'speakasap-records':
+  sudo ln -s /srv/speakasap-records /srv/minio-data/speakasap-records
+  ```
 
 ## 3. Integrate with Nginx (dev)
 
