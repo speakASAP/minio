@@ -12,7 +12,7 @@ S3-compatible object storage microservice for lesson records. Runs on **dev serv
 
 ## Deployment (Dev Server)
 
-MinIO runs on dev only as the backing store for lesson records. statex/nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`).
+MinIO runs on dev only as the backing store for lesson records. nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`). The deploy script patches the generated nginx config so that `minio.alfares.cz` proxies to **host systemd MinIO** at `host.docker.internal:9000` (not the MinIO Docker container). The nginx container must resolve `host.docker.internal` (e.g. run with `--add-host=host.docker.internal:host-gateway` or set `extra_hosts: - "host.docker.internal:host-gateway"` in its compose).
 
 ### Prerequisites
 
@@ -168,13 +168,13 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 ## Access
 
-* **From prod (speakasap-portal)**: HTTPS URL to dev MinIO (e.g. `https://85.163.140.109/minio/` or `https://minio.<dev-domain>`) with credentials in env. Portal uses S3 SDK to PUT objects and generate presigned GET URLs.
+* **From prod (speakasap-portal)**: HTTPS URL to dev MinIO via the public hostname (currently `https://minio.alfares.cz`, fronted by nginx-microservice) with credentials in env. Portal uses S3 SDK to PUT objects and generate presigned GET URLs.
 * **Direct (dev only)**: `http://127.0.0.1:9000` (API), `http://127.0.0.1:9001` (Console). Keep MinIO bound to localhost.
 
 ## Security
 
-* MinIO listens on 127.0.0.1 only.
-* Bucket `records` is private; no anonymous read.
+* MinIO listens on 127.0.0.1 only; external access is only via nginx-microservice on `https://minio.alfares.cz`.
+* Bucket `speakasap-records` is private; no anonymous read.
 * Presigned URL expiration ≤ 24 hours (configured in portal).
 * Store MINIO_ROOT_USER / MINIO_ROOT_PASSWORD and portal S3 keys in env only; never commit.
 
