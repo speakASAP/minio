@@ -61,9 +61,9 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 ## 2. Deploy MinIO on dev
 
-* [ ] Create `/srv/minio-data` on dev
-* [ ] Create system user `minio`, `chown -R minio:minio /srv/minio-data`
-* [ ] Systemd service: bind 127.0.0.1:9000, `minio server /srv/minio-data --console-address ":9001"`
+* [ ] Create `/var/lib/minio-data` on dev; create system user `minio`, `chown -R minio:minio /var/lib/minio-data`
+* [ ] Systemd service: bind 127.0.0.1:9000, `minio server /var/lib/minio-data --console-address ":9001"`
+* [ ] After bucket `records` exists: bind mount so files appear at `/srv/speakasap-records/YYYY/MM/DD/`: `mount --bind /var/lib/minio-data/records /srv/speakasap-records` and add to fstab
 * [ ] Strong MINIO_ROOT_USER and MINIO_ROOT_PASSWORD in env
 
 ## 3. Integrate with Nginx (dev)

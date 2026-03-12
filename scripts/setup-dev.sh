@@ -7,7 +7,9 @@ set -e
 
 MINIO_USER=minio
 MINIO_GROUP=minio
-DATA_DIR=/srv/minio-data
+# MinIO stores under <data-dir>/<bucket>/<key>. Bind mount <data-dir>/records to /srv/speakasap-records so files appear at /srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3
+DATA_DIR=/var/lib/minio-data
+SPEAKASAP_RECORDS_MOUNT=/srv/speakasap-records
 INSTALL_DIR=/srv/minio
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -53,7 +55,13 @@ if [ ! -x /usr/local/bin/minio ]; then
     echo "  chown minio:minio /usr/local/bin/minio"
 fi
 
+echo "[minio] Creating mount point for records (bind mount after bucket exists): ${SPEAKASAP_RECORDS_MOUNT}"
+mkdir -p "${SPEAKASAP_RECORDS_MOUNT}"
+
 echo "[minio] Setup done. Next:"
 echo "  1. Edit ${INSTALL_DIR}/.env and set MINIO_ROOT_USER, MINIO_ROOT_PASSWORD"
 echo "  2. systemctl enable minio && systemctl start minio"
 echo "  3. Run ./scripts/init-bucket.sh to create bucket 'records'"
+echo "  4. Bind mount so files appear at ${SPEAKASAP_RECORDS_MOUNT}/YYYY/MM/DD/:"
+echo "     sudo mount --bind ${DATA_DIR}/records ${SPEAKASAP_RECORDS_MOUNT}"
+echo "     Add to /etc/fstab for boot: ${DATA_DIR}/records  ${SPEAKASAP_RECORDS_MOUNT}  none  bind  0  0"

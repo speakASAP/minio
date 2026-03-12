@@ -72,7 +72,7 @@ sudo systemctl start minio
 sudo systemctl status minio
 ```
 
-MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies.
+MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies. MinIO data dir is **`/var/lib/minio-data`** (systemd and Docker). Object keys are `YYYY/MM/DD/lesson_<uuid>.mp3`, so files are at `/var/lib/minio-data/records/YYYY/MM/DD/lesson_<uuid>.mp3`. To expose them under **`/srv/speakasap-records/YYYY/MM/DD/`**, bind mount after creating the bucket: `mount --bind /var/lib/minio-data/records /srv/speakasap-records` (add to fstab for boot).
 
 ### 2. Nginx (dev)
 
