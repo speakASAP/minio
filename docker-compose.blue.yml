@@ -15,7 +15,7 @@ services:
       - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL}
       - LOGGING_SERVICE_URL=${LOGGING_SERVICE_URL}
     volumes:
-      - /var/lib/minio-data:/data
+      - /srv/minio-data:/data
     networks:
       - nginx-network
     restart: unless-stopped
