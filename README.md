@@ -195,9 +195,11 @@ If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling 
 
 0. **AllAccessDisabled ("All access to this resource has been disabled")**
 
-   This usually means MinIO cannot write to its metadata under the data dir (e.g. `.minio.sys`). Fix on the **host that actually serves minio.alfares.cz** (where the MinIO that receives the portal's requests runs).
+   This usually means MinIO cannot write to its metadata or to the bucket target dir. Fix on the **host that actually serves minio.alfares.cz** (where the MinIO that receives the portal's requests runs).
 
-   **If `check-minio.sh` on dev shows PUT OK but the portal (speakasap) still gets AllAccessDisabled:** the portal uses the **public** URL `https://minio.alfares.cz/minio/`. That is served by the **Docker** MinIO container (minio-microservice-green/blue) on the host where minio.alfares.cz is deployed (often **statex**, not dev). Dev's systemd MinIO is a different instance; fix the one behind the public URL.
+   **Confirm which host serves the URL:** From speakasap or your laptop run `getent hosts minio.alfares.cz` or `dig +short minio.alfares.cz`. The IP is the host that must have correct permissions and a running MinIO. If that host is **dev**, use the systemd steps below (and ensure `/srv/speakasap-records` is writable by user `minio`). If it is **statex** or another host, apply the same fix there (Docker: UID 1000; systemd: user `minio`).
+
+   **If `check-minio.sh` on dev shows PUT OK but the portal (speakasap) still gets AllAccessDisabled:** either the portal is hitting a different host (see above), or the MinIO that serves the public URL is systemd on dev and needs `/srv/speakasap-records` owned by `minio:minio` plus a **restart**: `sudo systemctl restart minio`.
 
    **On the host that serves minio.alfares.cz** (e.g. statex):
 
@@ -211,15 +213,18 @@ If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling 
      # or minio-microservice-blue if that is the active side
      ```
 
-   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker):
+   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker): also make the **bucket target** writable (symlink `speakasap-records` → `/srv/speakasap-records`):
 
      ```bash
-     sudo systemctl stop minio
      sudo chown -R minio:minio /srv/minio-data
      sudo chmod -R u+rwX /srv/minio-data
-     sudo systemctl start minio
+     sudo chown -R minio:minio /srv/speakasap-records
+     sudo chmod -R u+rwX /srv/speakasap-records
+     sudo systemctl restart minio
      sudo systemctl status minio
      ```
+
+   **After any permission fix, restart MinIO** (systemd or Docker) so it clears cached error state.
 
    Then on the portal host:
 
@@ -261,3 +266,25 @@ If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling 
    ```
 
    * When correctly configured, this should return HTTP 200 from the helper and a successful `head_object` on the same bucket/key in MinIO.
+
+### Systemd MinIO fails to start (exit-code / FAILURE) on dev
+
+If `systemctl status minio` shows `Active: activating (auto-restart) (Result: exit-code)`:
+
+* **Port conflict:** Docker MinIO (minio-microservice-blue/green) may already be bound to 9000. Only one process can listen on 127.0.0.1:9000. Check with `ss -tlnp | grep 9000`.
+* **Ownership:** If `/srv/minio-data` was changed to `1000:1000` for Docker, systemd MinIO (user `minio`, UID 995) cannot write there.
+
+**Recommended when using deploy (Docker blue/green):** run only Docker MinIO on dev and disable systemd. Use **minio:minio** for both dirs (Docker runs as root and can write to them):
+
+```bash
+# On dev
+sudo systemctl stop minio
+sudo systemctl disable minio
+sudo chown -R minio:minio /srv/minio-data /srv/speakasap-records
+sudo chmod -R u+rwX /srv/minio-data /srv/speakasap-records
+cd ~/Documents/Github/minio-microservice
+docker stop minio-microservice-blue; docker rm minio-microservice-blue
+docker compose -f docker-compose.blue.yml up -d
+```
+
+Then from speakasap: `supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper` and `python3 scripts/verify_s3_records_upload.py`.
