@@ -16,6 +16,8 @@ services:
       - LOGGING_SERVICE_URL=${LOGGING_SERVICE_URL}
     volumes:
       - /srv/minio-data:/data
+      # Symlink /data/speakasap-records -> /srv/speakasap-records; container must see that path.
+      - /srv/speakasap-records:/srv/speakasap-records
     networks:
       - nginx-network
     restart: unless-stopped
