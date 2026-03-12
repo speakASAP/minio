@@ -193,6 +193,44 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling `PutObject` to `https://minio.alfares.cz`:
 
+0. **AllAccessDisabled ("All access to this resource has been disabled")**
+
+   This usually means MinIO cannot write to its metadata under the data dir (e.g. `.minio.sys`). Fix on the **host that actually serves minio.alfares.cz** (where the MinIO that receives the portal's requests runs).
+
+   **If `check-minio.sh` on dev shows PUT OK but the portal (speakasap) still gets AllAccessDisabled:** the portal uses the **public** URL `https://minio.alfares.cz/minio/`. That is served by the **Docker** MinIO container (minio-microservice-green/blue) on the host where minio.alfares.cz is deployed (often **statex**, not dev). Dev's systemd MinIO is a different instance; fix the one behind the public URL.
+
+   **On the host that serves minio.alfares.cz** (e.g. statex):
+
+   * **Docker MinIO** (typical when deployed via `./scripts/deploy.sh`): the container uses `/srv/minio-data` on that host. MinIO in Docker runs as UID 1000. Fix and restart:
+
+     ```bash
+     ssh statex   # or the host that runs minio-microservice Docker
+     sudo chown -R 1000:1000 /srv/minio-data
+     sudo chmod -R u+rwX /srv/minio-data
+     docker restart minio-microservice-green
+     # or minio-microservice-blue if that is the active side
+     ```
+
+   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker):
+
+     ```bash
+     sudo systemctl stop minio
+     sudo chown -R minio:minio /srv/minio-data
+     sudo chmod -R u+rwX /srv/minio-data
+     sudo systemctl start minio
+     sudo systemctl status minio
+     ```
+
+   Then on the portal host:
+
+   ```bash
+   ssh speakasap
+   supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper
+   cd ~/speakasap-portal && python3 scripts/verify_s3_records_upload.py
+   ```
+
+   Expect helper 200 and "S3 upload path OK".
+
 1. **Verify bucket and credentials directly from dev:**
 
    ```bash
