@@ -80,8 +80,18 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 ## 4. Initialize MinIO
 
-* [ ] Create bucket `records`
-* [ ] Disable public access; all access via presigned URLs only
+* [x] Create bucket `${RECORDS_BUCKET}` (currently `speakasap-records`)
+* [x] Point bucket directory at existing copied data (no byte moves) via symlink:
+
+  ```bash
+  # Existing data from NFS copy:
+  #   /srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3
+  #
+  # Expose it to MinIO as bucket 'speakasap-records':
+  sudo ln -s /srv/speakasap-records /srv/minio-data/speakasap-records
+  ```
+
+* [x] Disable public access; all access via presigned URLs only
 
 ---
 

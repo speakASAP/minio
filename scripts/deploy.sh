@@ -213,12 +213,13 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
             if [ -f "$f" ]; then
                 # Use MinIO-specific proxy settings include (SigV4‑safe headers).
                 sed -i.bak 's|include /etc/nginx/includes/common-proxy-settings.conf|include /etc/nginx/includes/minio-proxy-settings.conf|g' "$f"
-                # Ensure root S3 location does NOT rewrite the URI (no trailing slash on proxy_pass).
-                sed -i.bak 's|proxy_pass http://\$TARGET_UPSTREAM/;|proxy_pass http://$TARGET_UPSTREAM;|g' "$f"
+                # Route to host systemd MinIO (127.0.0.1:9000 on host). From inside nginx container
+                # we use host.docker.internal:9000 so the bucket speakasap-records and data dir are used.
+                sed -i.bak 's|proxy_pass http://\$TARGET_UPSTREAM|proxy_pass http://host.docker.internal:9000|g' "$f"
                 # Allow local HTTPS checks from the host itself.
                 sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
                 rm -f "${f}.bak"
-                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name)${NC}"
+                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 + host systemd (include + proxy_pass + server_name)${NC}"
             fi
         done
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
