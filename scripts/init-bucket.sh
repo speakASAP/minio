@@ -38,6 +38,8 @@ while IFS= read -r line || [ -n "$line" ]; do
 done < "$ENV_FILE"
 
 BUCKET="${RECORDS_BUCKET:-speakasap-records}"
+echo "[minio] BUCKET=${BUCKET}"
+
 ALIAS=minio-local
 # MinIO on dev: default API port 9000 (localhost)
 ENDPOINT="${MINIO_ENDPOINT:-http://127.0.0.1:9000}"
