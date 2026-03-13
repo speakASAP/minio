@@ -215,10 +215,12 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
                 sed -i.bak 's|include /etc/nginx/includes/common-proxy-settings.conf|include /etc/nginx/includes/minio-proxy-settings.conf|g' "$f"
                 # Ensure root S3 location does NOT rewrite the URI (no trailing slash on proxy_pass).
                 sed -i.bak 's|proxy_pass http://\$TARGET_UPSTREAM/;|proxy_pass http://$TARGET_UPSTREAM;|g' "$f"
+                # Strip /minio prefix so MinIO sees path-style /bucket/key (portal uses .../minio/).
+                perl -i.bak -0pe 's|(location /minio/ \{[\s\S]*?)proxy_pass http://\$TARGET_UPSTREAM/minio/;|\1rewrite ^/minio/(.*)$ /$1 break;\n        proxy_pass http://\$TARGET_UPSTREAM;|gs' "$f" 2>/dev/null || true
                 # Allow local HTTPS checks from the host itself.
                 sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
                 rm -f "${f}.bak"
-                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name)${NC}"
+                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name + /minio strip)${NC}"
             fi
         done
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
