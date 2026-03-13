@@ -216,7 +216,9 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
                 # Ensure root S3 location does NOT rewrite the URI (no trailing slash on proxy_pass).
                 sed -i.bak 's|proxy_pass http://\$TARGET_UPSTREAM/;|proxy_pass http://$TARGET_UPSTREAM;|g' "$f"
                 # Strip /minio prefix so MinIO sees path-style /bucket/key (portal uses .../minio/).
-                perl -i.bak -0pe 's|(location /minio/ \{[\s\S]*?)proxy_pass http://\$TARGET_UPSTREAM/minio/;|\1rewrite ^/minio/(.*)$ /$1 break;\n        proxy_pass http://\$TARGET_UPSTREAM;|gs' "$f" 2>/dev/null || true
+                # Only within the /minio/ location block: replace proxy_pass line with rewrite + proxy_pass.
+                sed -i.bak '/location \/minio\//,/}/ s|proxy_pass http://\$TARGET_UPSTREAM/minio/;|rewrite ^/minio/(.*)$ /$1 break;\
+        proxy_pass http://$TARGET_UPSTREAM;|' "$f"
                 # Allow local HTTPS checks from the host itself.
                 sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
                 rm -f "${f}.bak"
