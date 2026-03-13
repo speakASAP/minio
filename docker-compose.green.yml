@@ -15,7 +15,7 @@ services:
       - MINIO_BROWSER_REDIRECT_URL=${MINIO_BROWSER_REDIRECT_URL}
       - LOGGING_SERVICE_URL=${LOGGING_SERVICE_URL}
     volumes:
-      - /srv/minio-data:/data
+      - /srv/speakasap-records:/data
     networks:
       - nginx-network
     restart: unless-stopped
