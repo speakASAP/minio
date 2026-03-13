@@ -1,6 +1,6 @@
 # MinIO Microservice (Records Storage)
 
-S3-compatible object storage microservice for lesson records. Runs on **dev server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS. MinIO stores lesson MP3s in a bucket that points to the existing copied data under `/srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3` on dev (no NFS dependency).
+S3-compatible object storage microservice for lesson records. Runs on **dev server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS. MinIO stores lesson MP3s in a bucket rooted at the canonical data directory `/srv/speakasap-records` on dev (no NFS dependency): bucket `speakasap-records` maps to `/srv/speakasap-records/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`.
 
 **Note:** The portal (speakasap) and MinIO are on **different servers**; they do not share an internal network. The portal must use the **public MinIO URL** (e.g. `https://minio.alfares.cz`), and all S3 traffic goes through the proxy. The proxy must forward `Host` and `Authorization` unchanged for S3 SigV4 (see `nginx/minio.conf` and deploy).
 
@@ -72,16 +72,33 @@ sudo systemctl start minio
 sudo systemctl status minio
 ```
 
-MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies. MinIO data dir is **`/srv/minio-data`** (systemd and Docker). The bucket directory for lesson records is configured to point at the existing copy under `/srv/speakasap-records` via symlink:
+MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies.
 
-```bash
-# On dev (after creating /srv/speakasap-records and copying NFS data there):
-sudo ln -s /srv/speakasap-records /srv/minio-data/speakasap-records
-```
+> **Data root (dev Docker deploy)**  
+> When deployed via Docker on dev, MinIO’s data root is the **canonical records directory**:
+>
+> ```yaml
+> # docker-compose.{blue,green}.yml
+> services:
+>   minio:
+>     volumes:
+>       - /srv/speakasap-records:/data
+> ```
+>
+> MinIO metadata lives under:
+>
+> * `/srv/speakasap-records/.minio`
+> * `/srv/speakasap-records/.minio.sys`
+>
+> Bucket `speakasap-records` is a directory under that root:
+>
+> * `/srv/speakasap-records/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`
+>
+> **Do not place mounts or symlinks under `/data`** (inside the container) – MinIO requires that `.minio.sys` and all bucket paths live on the same filesystem. Sub-mounts or cross-device symlinks under `/data` will cause errors such as `Rename across devices not allowed` and S3 `AllAccessDisabled`.
 
 With `RECORDS_BUCKET=speakasap-records` and object keys `YYYY/MM/DD/lesson_<uuid>.mp3`, files are at:
 
-* `/srv/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3` on dev (canonical copy)
+* `/srv/speakasap-records/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3` on dev (canonical copy)
 * Exposed via S3 as `speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`.
 
 ### 2. Nginx (dev)
@@ -195,29 +212,44 @@ If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling 
 
 0. **AllAccessDisabled ("All access to this resource has been disabled")**
 
-   This usually means MinIO cannot write to its metadata or to the bucket target dir. Fix on the **host that actually serves minio.alfares.cz** (where the MinIO that receives the portal's requests runs).
+   This usually means MinIO cannot:
 
-   **Confirm which host serves the URL:** From speakasap or your laptop run `getent hosts minio.alfares.cz` or `dig +short minio.alfares.cz`. The IP is the host that must have correct permissions and a running MinIO. If that host is **dev**, use the systemd steps below (and ensure `/srv/speakasap-records` is writable by user `minio`). If it is **statex** or another host, apply the same fix there (Docker: UID 1000; systemd: user `minio`).
+   * Write to its metadata or bucket directory, **or**
+   * Atomically move objects from `.minio.sys/tmp` into the bucket because the bucket path lives on a **different filesystem** (cross-device rename).
 
-   **If `check-minio.sh` on dev shows PUT OK but the portal (speakasap) still gets AllAccessDisabled:** either the portal is hitting a different host (see above), or the MinIO that serves the public URL is systemd on dev and needs `/srv/speakasap-records` owned by `minio:minio` plus a **restart**: `sudo systemctl restart minio`.
+   Fix on the **host that actually serves minio.alfares.cz** (where the MinIO that receives the portal's requests runs).
+
+   **Confirm which host serves the URL:** From speakasap or your laptop run `getent hosts minio.alfares.cz` or `dig +short minio.alfares.cz`. The IP is the host that must have correct permissions and a running MinIO.
+
+   If MinIO logs show:
+
+   ```text
+   Error: Rename across devices not allowed, please fix your backend configuration
+   FATAL Invalid command line arguments: Cross-device mounts detected on path (/data) ...
+   ```
+
+   then there is a **sub-mount or cross-device symlink under `/data`**. Remove any mounts/symlinks inside the MinIO data root and keep all bucket directories on the same filesystem (see data-root section above).
 
    **On the host that serves minio.alfares.cz** (e.g. statex):
 
-   * **Docker MinIO** (typical when deployed via `./scripts/deploy.sh`): the container uses `/srv/minio-data` on that host. MinIO in Docker runs as UID 1000. Fix and restart:
+   * **Docker MinIO** (typical when deployed via `./scripts/deploy.sh` on dev): the container uses `/srv/speakasap-records` on that host as its data root:
 
-     ```bash
-     ssh statex   # or the host that runs minio-microservice Docker
-     sudo chown -R 1000:1000 /srv/minio-data
-     sudo chmod -R u+rwX /srv/minio-data
-     docker restart minio-microservice-green
-     # or minio-microservice-blue if that is the active side
+     ```yaml
+     volumes:
+       - /srv/speakasap-records:/data
      ```
 
-   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker): also make the **bucket target** writable (symlink `speakasap-records` → `/srv/speakasap-records`):
+     Ensure ownership and permissions:
 
      ```bash
-     sudo chown -R minio:minio /srv/minio-data
-     sudo chmod -R u+rwX /srv/minio-data
+     sudo chown -R minio:minio /srv/speakasap-records
+     sudo chmod -R u+rwX /srv/speakasap-records
+     docker restart minio-microservice-blue   # or green, whichever is active
+     ```
+
+   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker): also make the **bucket target** writable:
+
+     ```bash
      sudo chown -R minio:minio /srv/speakasap-records
      sudo chmod -R u+rwX /srv/speakasap-records
      sudo systemctl restart minio
