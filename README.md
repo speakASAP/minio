@@ -58,7 +58,7 @@ Run on **dev server** in this order:
    ./scripts/init-bucket.sh
    ```
 
-6. **Optional – Nginx (dev)**: when MinIO is behind nginx-microservice, `nginx/nginx-api-routes.conf` must list `/minio/` and `/records/` (not `/`, which would replace the URI and break S3). After changing it, redeploy via `./scripts/deploy.sh`.
+6. **Optional – Nginx (dev)**: when MinIO is behind nginx-microservice, `nginx/nginx-api-routes.conf` lists `/`, `/minio/`, and `/records/`. Root `/` is required so the portal can use `https://minio.alfares.cz` (no path) and SigV4 path matches. After changing it, redeploy via `./scripts/deploy.sh`.
 
 7. **Optional – deploy.sh**: only if MinIO is later added to nginx-microservice on statex (per this README, MinIO runs on dev only; deploy.sh is for blue/green on statex).
 
@@ -174,10 +174,10 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
 * On dev: copy to `.env` and set MINIO_ROOT_USER / MINIO_ROOT_PASSWORD (strong).
-* Prod (speakasap-portal): set S3 endpoint URL, bucket, access key, secret key in portal `.env` (see speakasap-portal docs). Currently:
+* Prod (speakasap-portal): set S3 endpoint URL (root only), bucket, access key, secret key in portal `.env` (see speakasap-portal docs). Use the root URL so SigV4 path matches what MinIO receives:
 
   ```env
-  RECORDS_S3_ENDPOINT_URL=https://minio.alfares.cz/minio/
+  RECORDS_S3_ENDPOINT_URL=https://minio.alfares.cz
   RECORDS_S3_BUCKET=speakasap-records
   ```
 
@@ -209,6 +209,18 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 ## Troubleshooting uploads from speakasap-portal
 
 If `speakasap-portal` reports helper 500s or `NoSuchBucket` errors when calling `PutObject` to `https://minio.alfares.cz`:
+
+**Playback "Could not connect to the server" / NotSupportedError**
+
+The teacher/manager play button redirects the browser to a presigned URL on `https://minio.alfares.cz/...`. If the browser cannot reach that host (firewall, DNS, or HTTPS not exposed), you get connection failure and NotSupportedError.
+
+* Ensure `minio.alfares.cz` is reachable from the **client** (teacher’s browser): open `https://minio.alfares.cz` in a new tab from the same machine; or run `curl -I https://minio.alfares.cz` from that network.
+* CORS is added by deploy so the portal origin can load the audio; redeploy MinIO to apply it.
+
+### Nginx API routes and deploy patches
+
+* `nginx/nginx-api-routes.conf` registers `/`, `/minio/`, and `/records/`. Root `/` is required for path-style S3 when the portal uses `https://minio.alfares.cz` (no path prefix).
+* `scripts/deploy.sh` after deploy: patches generated configs to use `minio-proxy-settings.conf` (SigV4 headers), strips `/minio` prefix in the `/minio/` location so MinIO sees path-style keys, and adds CORS headers so the browser can play presigned GET responses.
 
 0. **AllAccessDisabled ("All access to this resource has been disabled")**
 

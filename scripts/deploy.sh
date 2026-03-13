@@ -207,6 +207,11 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
             echo "proxy_buffer_size 128k;"
             echo "proxy_buffers 4 256k;"
             echo "proxy_busy_buffers_size 256k;"
+            echo ""
+            echo "# CORS: allow portal to load presigned GET in browser (audio playback)"
+            echo "add_header Access-Control-Allow-Origin '*' always;"
+            echo "add_header Access-Control-Allow-Methods 'GET, HEAD, OPTIONS' always;"
+            echo "add_header Access-Control-Expose-Headers 'Content-Length, Content-Type, ETag' always;"
         } > "$MINIO_INCLUDE_DST"
         echo -e "${GREEN}✓ Generated minio-proxy-settings.conf from nginx/minio.conf (SigV4 Host/Authorization)${NC}"
         for f in "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.blue.conf" "$BLUE_GREEN_DIR/${MINIO_DOMAIN}.green.conf"; do

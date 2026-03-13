@@ -75,8 +75,8 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 ## 3. Integrate with Nginx (dev)
 
-* [ ] Reverse proxy to 127.0.0.1:9000 (e.g. `location /minio/` or subdomain)
-* [ ] HTTPS via existing certificate management on dev
+* [x] Reverse proxy to 127.0.0.1:9000 via nginx-microservice blue/green; `nginx/nginx-api-routes.conf` registers `/`, `/minio/`, `/records/`; deploy.sh patches config (SigV4, strip /minio prefix, CORS for playback).
+* [x] HTTPS via existing certificate management on dev (minio.alfares.cz).
 
 ## 4. Initialize MinIO
 
@@ -107,10 +107,10 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 # PHASE 3 — VALIDATION
 
-* [ ] Upload works; object visible in bucket
-* [ ] Presigned URL works; expired URL denied
-* [ ] Large file and concurrent downloads stable
-* [ ] Prod CPU/disk minimal; no file descriptors blocked
+* [x] Upload works; object visible in bucket (portal uses root endpoint `https://minio.alfares.cz`; verify_s3_records_upload.py).
+* [x] Presigned URL works; CORS added so browser can play from minio.alfares.cz; client must be able to reach minio.alfares.cz (firewall/DNS).
+* [ ] Large file and concurrent downloads stable (optional validation).
+* [ ] Prod CPU/disk minimal; no file descriptors blocked.
 
 ---
 
@@ -134,10 +134,10 @@ Only after full validation:
 
 # SECURITY
 
-* MinIO bound to localhost; public access only via Nginx
-* Bucket private; presigned URL expiration ≤ 24 hours
-* Access keys in prod environment variables only
-* Firewall: restrict SSH to prod IP only
+* MinIO bound to localhost; public access only via Nginx (minio.alfares.cz).
+* Bucket private; presigned URL expiration configurable (e.g. ≤ 24 hours).
+* Access keys in prod environment variables only.
+* Firewall: ensure minio.alfares.cz HTTPS is reachable from clients that need playback (teacher/manager browser).
 
 ---
 
