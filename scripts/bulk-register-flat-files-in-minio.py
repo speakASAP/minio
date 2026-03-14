@@ -8,8 +8,9 @@ Run inside a container that has:
     http://minio-microservice-blue:9000)
   - Env: MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
 
-For each .mp3 under /data/speakasap-records/: stream file in place to MinIO (PutObject). No copy or
-rename on disk; file is read once and streamed to MinIO. Populates MinIO's namespace for the portal.
+For each .mp3 under /data/speakasap-records/: move file to .bak, PutObject from .bak, remove .bak.
+Required because MinIO writes to the same path; the flat file must be moved aside so MinIO can create
+the object there. Populates MinIO's namespace for the portal.
 
 Usage:
   docker run --rm --network nginx-network \\
@@ -88,10 +89,11 @@ def object_exists(client, key):
 
 
 def register_one(key, client, dry_run, resume_done, skip_existing):
-    """Stream file in place to MinIO (PutObject). No copy or rename on disk."""
+    """Move flat file to .bak, PutObject from .bak, remove .bak. Required so MinIO can create object at that path."""
     path = os.path.join(BUCKET_ROOT, key)
     if not os.path.isfile(path):
         return False, "not a file"
+    path_bak = path + ".bak"
     if dry_run:
         return True, "dry-run"
     if resume_done and key in resume_done:
@@ -99,7 +101,11 @@ def register_one(key, client, dry_run, resume_done, skip_existing):
     if skip_existing and object_exists(client, key):
         return True, "skipped (exists)"
     try:
-        with open(path, "rb") as f:
+        os.rename(path, path_bak)
+    except OSError as e:
+        return False, "rename: %s" % e
+    try:
+        with open(path_bak, "rb") as f:
             client.put_object(
                 Bucket=BUCKET,
                 Key=key,
@@ -107,12 +113,24 @@ def register_one(key, client, dry_run, resume_done, skip_existing):
                 ContentType=CONTENT_TYPE_MP3,
             )
     except ClientError as e:
+        try:
+            os.rename(path_bak, path)
+        except OSError:
+            pass
         code = e.response.get("Error", {}).get("Code", "")
         if code == "AccessDenied":
             return False, "put_object: AccessDenied (ensure bucket exists: run init-bucket.sh on the MinIO host)"
         return False, "put_object: %s" % e
     except Exception as e:
+        try:
+            os.rename(path_bak, path)
+        except OSError:
+            pass
         return False, "put_object: %s" % e
+    try:
+        os.remove(path_bak)
+    except OSError as e:
+        return False, "remove .bak: %s" % e
     return True, "ok"
 
 
@@ -159,14 +177,15 @@ def main():
                     resume_done.add(k)
         print("Resume: %d keys already done" % len(resume_done), file=sys.stderr)
 
-    client = get_s3_client(endpoint, access, secret)
-    ensure_bucket(client)
     if args.dry_run:
         for k in keys[:20]:
             print(k)
         if len(keys) > 20:
             print("... and %d more" % (len(keys) - 20), file=sys.stderr)
         return 0
+
+    client = get_s3_client(endpoint, access, secret)
+    ensure_bucket(client)
 
     # Group keys by month (YYYY/MM) for progress and parallel batch processing
     by_month = defaultdict(list)
