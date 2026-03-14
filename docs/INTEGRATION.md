@@ -24,10 +24,9 @@ Parts (before merge) use: `YYYY/MM/DD/parts_<part_uuid>.<ext>`.
 ## Consumer (playback)
 
 1. **Teacher / manager / student playback**
-   * Backend validates authorization.
-   * Generate presigned GET URL for the object (expiration e.g. 900–86400 seconds).
-   * Return redirect to presigned URL (teacher/manager) or URL in JSON.
-   * Client (browser) loads audio directly from MinIO at `https://minio.alfares.cz/...`. MinIO nginx proxy adds CORS headers so the portal origin can use the response. The client must be able to reach `minio.alfares.cz` (firewall/DNS).
+   * Backend validates authorization (session or signed `?token=` for student).
+   * Playback is **streamed through the portal**: the portal calls the local **records_s3_helper** (`GET {helper_base}/download?bucket=...&key=...`), which streams the object from MinIO; the portal proxies the response to the browser. The client does not load audio directly from MinIO.
+   * Student API returns an **absolute** record URL (with `?token=...`) so the in-page audio player can load the MP3 correctly.
 
 ## S3 API (MinIO-compatible)
 
@@ -41,4 +40,5 @@ Parts (before merge) use: `YYYY/MM/DD/parts_<part_uuid>.<ext>`.
 * `RECORDS_S3_ENDPOINT_URL` – MinIO API root URL (HTTPS, no trailing path, e.g. `https://minio.alfares.cz`).
 * `RECORDS_S3_BUCKET` – `speakasap-records`.
 * `RECORDS_S3_ACCESS_KEY` / `RECORDS_S3_SECRET_KEY` – credentials with read/write to bucket.
+* `RECORDS_S3_HELPER_URL` – local helper for upload and playback (e.g. `http://127.0.0.1:5051/upload`). Loaded from `.env` into Django settings; must be set so playback uses the helper (`via_helper=True`) and avoids 403 from direct Django storage HeadObject.
 * `RECORDS_PRESIGNED_EXPIRY_SECONDS` – e.g. 900 (15 min) or 86400 (24h).
