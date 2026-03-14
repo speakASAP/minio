@@ -67,4 +67,4 @@ docker run --rm \
   -e MINIO_ROOT_PASSWORD="$MINIO_ROOT_PASSWORD" \
   -e MINIO_ENDPOINT="$MINIO_ENDPOINT" \
   python:3.11-slim \
-  bash -c "pip install -q boto3 && python /script/bulk-register-flat-files-in-minio.py $*"
+  bash -c "pip install -q --upgrade pip && pip install -q boto3 && python /script/bulk-register-flat-files-in-minio.py $*"
