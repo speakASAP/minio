@@ -35,6 +35,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 try:
     import boto3
     from botocore.config import Config
+    from botocore.exceptions import ClientError
 except ImportError:
     print("ERROR: boto3 required (pip install boto3)", file=sys.stderr)
     sys.exit(1)
@@ -55,6 +56,27 @@ def get_s3_client(endpoint, access, secret):
         region_name="us-east-1",
         config=cfg,
     )
+
+
+def ensure_bucket(client):
+    """Create bucket if it does not exist (avoids AccessDenied on first PutObject)."""
+    try:
+        client.head_bucket(Bucket=BUCKET)
+        return
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code", "")
+        if code in ("404", "NoSuchBucket", "AccessDenied"):
+            try:
+                client.create_bucket(Bucket=BUCKET)
+                print("Created bucket %s" % BUCKET, file=sys.stderr)
+            except ClientError as e2:
+                code2 = e2.response.get("Error", {}).get("Code", "")
+                if code2 in ("BucketAlreadyExists", "BucketAlreadyOwnedByYou"):
+                    return
+                print("ERROR: create_bucket: %s" % e2, file=sys.stderr)
+                raise
+            return
+        raise
 
 
 def object_exists(client, key):
@@ -84,6 +106,11 @@ def register_one(key, client, dry_run, resume_done, skip_existing):
                 Body=f,
                 ContentType=CONTENT_TYPE_MP3,
             )
+    except ClientError as e:
+        code = e.response.get("Error", {}).get("Code", "")
+        if code == "AccessDenied":
+            return False, "put_object: AccessDenied (ensure bucket exists: run init-bucket.sh on the MinIO host)"
+        return False, "put_object: %s" % e
     except Exception as e:
         return False, "put_object: %s" % e
     return True, "ok"
@@ -133,6 +160,7 @@ def main():
         print("Resume: %d keys already done" % len(resume_done), file=sys.stderr)
 
     client = get_s3_client(endpoint, access, secret)
+    ensure_bucket(client)
     if args.dry_run:
         for k in keys[:20]:
             print(k)
