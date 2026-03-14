@@ -8,8 +8,8 @@ Run inside a container that has:
     http://minio-microservice-blue:9000)
   - Env: MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
 
-For each .mp3 under /data/speakasap-records/: move to .bak, PutObject from .bak, remove .bak.
-This populates MinIO's namespace so the portal helper can serve the file.
+For each .mp3 under /data/speakasap-records/: stream file in place to MinIO (PutObject). No copy or
+rename on disk; file is read once and streamed to MinIO. Populates MinIO's namespace for the portal.
 
 Usage:
   docker run --rm --network nginx-network \\
@@ -21,6 +21,7 @@ Usage:
   --dry-run       Only list files that would be processed (no move/put/delete).
   --limit N       Process at most N files (for testing or chunked runs).
   --resume F      Skip keys listed in F (one key per line). Append to F after each success.
+  --workers N     Parallel uploads per month (default 32). Higher = faster, more load on MinIO.
 """
 from __future__ import print_function
 
@@ -28,6 +29,8 @@ import os
 import sys
 import time
 import argparse
+from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 try:
     import boto3
@@ -63,11 +66,10 @@ def object_exists(client, key):
 
 
 def register_one(key, client, dry_run, resume_done, skip_existing):
-    """Move flat file to .bak, PutObject from .bak, remove .bak. Returns True on success."""
+    """Stream file in place to MinIO (PutObject). No copy or rename on disk."""
     path = os.path.join(BUCKET_ROOT, key)
     if not os.path.isfile(path):
         return False, "not a file"
-    path_bak = path + ".bak"
     if dry_run:
         return True, "dry-run"
     if resume_done and key in resume_done:
@@ -75,28 +77,15 @@ def register_one(key, client, dry_run, resume_done, skip_existing):
     if skip_existing and object_exists(client, key):
         return True, "skipped (exists)"
     try:
-        os.rename(path, path_bak)
-    except OSError as e:
-        return False, "rename: %s" % e
-    try:
-        with open(path_bak, "rb") as f:
-            body = f.read()
-        client.put_object(
-            Bucket=BUCKET,
-            Key=key,
-            Body=body,
-            ContentType=CONTENT_TYPE_MP3,
-        )
+        with open(path, "rb") as f:
+            client.put_object(
+                Bucket=BUCKET,
+                Key=key,
+                Body=f,
+                ContentType=CONTENT_TYPE_MP3,
+            )
     except Exception as e:
-        try:
-            os.rename(path_bak, path)
-        except OSError:
-            pass
         return False, "put_object: %s" % e
-    try:
-        os.remove(path_bak)
-    except OSError as e:
-        return False, "remove .bak: %s" % e
     return True, "ok"
 
 
@@ -106,6 +95,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="Max number of files to process (0 = all)")
     ap.add_argument("--resume", type=str, default="", help="Resume file: skip keys in this file, append success keys")
     ap.add_argument("--skip-existing", action="store_true", help="Skip keys that already exist in MinIO (head_object)")
+    ap.add_argument("--workers", type=int, default=32, help="Parallel uploads (default 32)")
     args = ap.parse_args()
 
     endpoint = os.environ.get("MINIO_ENDPOINT", "http://minio-microservice-blue:9000")
@@ -150,26 +140,47 @@ def main():
             print("... and %d more" % (len(keys) - 20), file=sys.stderr)
         return 0
 
+    # Group keys by month (YYYY/MM) for progress and parallel batch processing
+    by_month = defaultdict(list)
+    for key in keys:
+        parts = key.split("/")
+        month = "/".join(parts[:2]) if len(parts) >= 2 else key
+        by_month[month].append(key)
+    months = sorted(by_month.keys())
+    workers = max(1, min(args.workers, 128))
+    print("Using %d workers" % workers, file=sys.stderr)
+
     done = 0
     failed = 0
     start = time.time()
     resume_f = open(args.resume, "a") if args.resume else None
 
-    for i, key in enumerate(keys):
-        ok, msg = register_one(key, client, False, resume_done, args.skip_existing)
-        if ok:
-            done += 1
-            if msg == "ok":
-                resume_done.add(key)
-                if resume_f:
-                    resume_f.write(key + "\n")
-                    resume_f.flush()
-        else:
-            failed += 1
-            print("FAIL %s: %s" % (key, msg), file=sys.stderr)
-        if (i + 1) % 500 == 0:
-            elapsed = time.time() - start
-            print("Progress: %d done, %d failed, %.1f/s" % (done, failed, (i + 1) / elapsed if elapsed else 0), file=sys.stderr)
+    def do_one(key):
+        ok, msg = register_one(key, client, False, set(), args.skip_existing)
+        return (key, ok, msg)
+
+    for month in months:
+        month_keys = [k for k in by_month[month] if k not in resume_done]
+        if not month_keys:
+            continue
+        elapsed = time.time() - start
+        rate = (done + failed) / elapsed if elapsed else 0
+        print("%s: %d done, %d failed so far (%.1f/s) -> processing %d files" % (
+            month, done, failed, rate, len(month_keys)), file=sys.stderr)
+        with ThreadPoolExecutor(max_workers=workers) as ex:
+            futures = {ex.submit(do_one, k): k for k in month_keys}
+            for fut in as_completed(futures):
+                key, ok, msg = fut.result()
+                if ok:
+                    done += 1
+                    if msg == "ok":
+                        resume_done.add(key)
+                        if resume_f:
+                            resume_f.write(key + "\n")
+                            resume_f.flush()
+                else:
+                    failed += 1
+                    print("FAIL %s: %s" % (key, msg), file=sys.stderr)
 
     if resume_f:
         resume_f.close()
