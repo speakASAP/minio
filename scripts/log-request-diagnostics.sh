@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Log diagnostics for S3 requests (SignatureDoesNotMatch, 405, etc.).
-# Run on dev server after reproducing the error, to see what MinIO and Nginx saw.
-#   ssh dev
+# Run on alfares server after reproducing the error, to see what MinIO and Nginx saw.
+#   ssh alfares
 #   cd /path/to/minio-microservice && ./scripts/log-request-diagnostics.sh
 # Use for: portal PutObject failures; compare Host/path on MinIO side with portal logs.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Setup MinIO on dev server: create user, data dir, systemd unit.
-# Run with sudo on dev (85.163.140.109).
+# Setup MinIO on alfares server: create user, data dir, systemd unit.
+# Run with sudo on alfares (85.163.140.109).
 # Prerequisite: MinIO binary at /usr/local/bin/minio (install manually or via script).
 
 set -e
@@ -41,7 +41,7 @@ fi
 
 echo "[minio] Installing systemd unit..."
 cp "${REPO_ROOT}/systemd/minio.service" /etc/systemd/system/minio.service
-# Unit expects EnvironmentFile (path to .env on dev)
+# Unit expects EnvironmentFile (path to .env on alfares)
 if ! grep -q "EnvironmentFile=${INSTALL_DIR}/.env" /etc/systemd/system/minio.service 2>/dev/null; then
     sed -i "s|EnvironmentFile=.*|EnvironmentFile=${INSTALL_DIR}/.env|" /etc/systemd/system/minio.service
 fi
