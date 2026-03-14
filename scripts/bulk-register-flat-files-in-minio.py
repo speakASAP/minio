@@ -92,7 +92,7 @@ def register_one(key, client, dry_run, resume_done, skip_existing):
     """Move flat file to .bak, PutObject from .bak, remove .bak. Required so MinIO can create object at that path."""
     path = os.path.join(BUCKET_ROOT, key)
     if not os.path.isfile(path):
-        return False, "not a file"
+        return True, "skipped (not a file)"
     path_bak = path + ".bak"
     if dry_run:
         return True, "dry-run"
@@ -198,6 +198,7 @@ def main():
     print("Using %d workers" % workers, file=sys.stderr)
 
     done = 0
+    skipped = 0
     failed = 0
     start = time.time()
     resume_f = open(args.resume, "a") if args.resume else None
@@ -211,20 +212,22 @@ def main():
         if not month_keys:
             continue
         elapsed = time.time() - start
-        rate = (done + failed) / elapsed if elapsed else 0
-        print("%s: %d done, %d failed so far (%.1f/s) -> processing %d files" % (
-            month, done, failed, rate, len(month_keys)), file=sys.stderr)
+        rate = (done + skipped + failed) / elapsed if elapsed else 0
+        print("%s: %d done, %d skipped, %d failed so far (%.1f/s) -> processing %d files" % (
+            month, done, skipped, failed, rate, len(month_keys)), file=sys.stderr)
         with ThreadPoolExecutor(max_workers=workers) as ex:
             futures = {ex.submit(do_one, k): k for k in month_keys}
             for fut in as_completed(futures):
                 key, ok, msg = fut.result()
                 if ok:
-                    done += 1
                     if msg == "ok":
+                        done += 1
                         resume_done.add(key)
                         if resume_f:
                             resume_f.write(key + "\n")
                             resume_f.flush()
+                    else:
+                        skipped += 1
                 else:
                     failed += 1
                     print("FAIL %s: %s" % (key, msg), file=sys.stderr)
@@ -232,7 +235,8 @@ def main():
     if resume_f:
         resume_f.close()
     elapsed = time.time() - start
-    print("Done: %d ok, %d failed in %.1fs (%.1f/s)" % (done, failed, elapsed, done / elapsed if elapsed else 0), file=sys.stderr)
+    print("Done: %d ok, %d skipped, %d failed in %.1fs (%.1f/s)" % (
+        done, skipped, failed, elapsed, done / elapsed if elapsed else 0), file=sys.stderr)
     return 0 if failed == 0 else 1
 
 
