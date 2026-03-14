@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Check MinIO service, bucket, and access. Run on dev: ssh dev 'cd minio-microservice && ./scripts/check-minio.sh'
+# Check MinIO service, bucket, and access. Run on alfares: ssh alfares 'cd minio-microservice && ./scripts/check-minio.sh'
 # Helps diagnose AllAccessDisabled and connectivity issues.
 
 set -e

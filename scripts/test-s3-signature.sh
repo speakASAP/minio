@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test S3 SigV4 PUT + GET (same as portal). Run on dev: ./scripts/test-s3-signature.sh
+# Test S3 SigV4 PUT + GET (same as portal). Run on alfares: ./scripts/test-s3-signature.sh
 # 1) PUT then GET (two-way) via endpoint (direct or through nginx), 2) show MinIO logs.
 # Uses .venv in repo for boto3 if system python has no boto3.
 set -e

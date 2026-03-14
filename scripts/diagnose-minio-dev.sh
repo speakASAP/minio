@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Diagnose MinIO + Nginx on dev (certificates, PUT, 520). Run on dev server:
-#   ssh dev
+# Diagnose MinIO + Nginx on alfares (certificates, PUT, 520). Run on alfares server:
+#   ssh alfares
 #   cd /home/ssf/Documents/Github/minio-microservice  # or /srv/minio
 #   ./scripts/diagnose-minio-dev.sh
-# Or: ssh dev 'bash -s' < scripts/diagnose-minio-dev.sh
+# Or: ssh alfares 'bash -s' < scripts/diagnose-minio-dev.sh
 
 set -e
 
 MINIO_HOST="${MINIO_HOST:-minio.alfares.cz}"
-echo "=== MinIO/Nginx diagnosis on dev (host: $MINIO_HOST) ==="
+echo "=== MinIO/Nginx diagnosis on alfares (host: $MINIO_HOST) ==="
 
 # 1) MinIO process and port
 echo ""

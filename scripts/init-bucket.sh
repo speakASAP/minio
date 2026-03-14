@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Create bucket 'speakasap-records' and disable public access.
-# Run on dev after MinIO is running. Requires: minio-mc (MinIO Client), .env with MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET.
+# Run on alfares after MinIO is running. Requires: minio-mc (MinIO Client), .env with MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET.
 
 set -e
 
@@ -41,7 +41,7 @@ BUCKET="${RECORDS_BUCKET:-speakasap-records}"
 echo "[minio] BUCKET=${BUCKET}"
 
 ALIAS=minio-local
-# MinIO on dev: default API port 9000 (localhost)
+# MinIO on alfares: default API port 9000 (localhost)
 ENDPOINT="${MINIO_ENDPOINT:-http://127.0.0.1:9000}"
 
 if [ -z "$MINIO_ROOT_USER" ] || [ -z "$MINIO_ROOT_PASSWORD" ]; then

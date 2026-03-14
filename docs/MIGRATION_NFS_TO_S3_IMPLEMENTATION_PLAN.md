@@ -6,7 +6,7 @@
 
 # OBJECTIVE
 
-Replace current NFS-based shared storage with a dedicated S3-compatible object storage microservice (MinIO) running on dev server (85.163.140.109).
+Replace current NFS-based shared storage with a dedicated S3-compatible object storage microservice (MinIO) running on alfares server (85.163.140.109).
 
 Requirements:
 
@@ -32,18 +32,18 @@ Access: `ssh speakasap` → `cd speakasap-portal`
 
 Ubuntu 16 – legacy system.
 
-## Dev
+## Alfares
 
 Public IP: 85.163.140.109  
 Current storage path for copied lesson records: `/srv/speakasap-records` (years/ months/ days/ `lesson_<uuid>.mp3`, ~2 TB copied from NFS).  
-Access: `ssh dev`  
-Nginx already installed. Dev is capable of hosting additional microservice.
+Access: `ssh alfares`  
+Nginx already installed. Alfares is capable of hosting additional microservice.
 
 ---
 
 # TARGET ARCHITECTURE
 
-* MinIO runs as separate microservice on dev.
+* MinIO runs as separate microservice on alfares.
 * Bucket: `RECORDS_BUCKET` (currently `speakasap-records`).
 * Object key: `YYYY/MM/DD/lesson_UUID.mp3` (e.g. `2026/03/04/lesson_05e290d8-87b0-48d8-860c-cb6ace4e5d51.mp3`)
 * Prod: PUT object + generate presigned GET URL only. No NFS, no shared filesystem.
@@ -56,12 +56,12 @@ Nginx already installed. Dev is capable of hosting additional microservice.
 
 * [x] Read README.md and CREATE_SERVICE.md
 * [x] MinIO follows project structure: README, docs/, .env.example, scripts
-* [x] Nginx reverse proxy style; SSL via existing cert process on dev
-* [x] Service runs on dev (85.163.140.109), not statex prod
+* [x] Nginx reverse proxy style; SSL via existing cert process on alfares
+* [x] Service runs on alfares (85.163.140.109), not statex prod
 
-## 2. Deploy MinIO on dev
+## 2. Deploy MinIO on alfares
 
-* [x] Create `/srv/minio-data` on dev; create system user `minio`, `chown -R minio:minio /srv/minio-data`
+* [x] Create `/srv/minio-data` on alfares; create system user `minio`, `chown -R minio:minio /srv/minio-data`
 * [x] Systemd service: bind 127.0.0.1:9000, `minio server /srv/minio-data --console-address ":9001"`
 * [x] Point MinIO bucket dir at existing copied data without moving bytes:
 
@@ -73,10 +73,10 @@ Nginx already installed. Dev is capable of hosting additional microservice.
   sudo ln -s /srv/speakasap-records /srv/minio-data/speakasap-records
   ```
 
-## 3. Integrate with Nginx (dev)
+## 3. Integrate with Nginx (alfares)
 
 * [x] Reverse proxy to 127.0.0.1:9000 via nginx-microservice blue/green; `nginx/nginx-api-routes.conf` registers `/`, `/minio/`, `/records/`; deploy.sh patches config (SigV4, strip /minio prefix, CORS for playback).
-* [x] HTTPS via existing certificate management on dev (minio.alfares.cz).
+* [x] HTTPS via existing certificate management on alfares (minio.alfares.cz).
 
 ## 4. Initialize MinIO
 
