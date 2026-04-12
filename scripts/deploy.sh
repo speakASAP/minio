@@ -3,7 +3,7 @@
 # Deploys MinIO to production using the nginx-microservice blue/green deployment system.
 #
 # Uses: nginx-microservice/scripts/blue-green/deploy-smart.sh
-# SSL: Let's Encrypt (managed by nginx-microservice). Set CERTBOT_EMAIL in nginx-microservice/.env.
+# SSL: Managed by nginx-microservice (Let's Encrypt per-host or wildcard via WILDCARD_CERT_DOMAINS + DNS-01).
 #
 # The script automatically detects the nginx-microservice location and
 # calls the deploy-smart.sh script to perform the deployment.
@@ -226,8 +226,24 @@ if [ $DEPLOY_EXIT_CODE -eq 0 ]; then
         proxy_pass http://$TARGET_UPSTREAM;|' "$f"
                 # Allow local HTTPS checks from the host itself.
                 sed -i.bak 's/server_name minio.alfares.cz;/server_name minio.alfares.cz 127.0.0.1;/' "$f"
+                # Nginx must answer /health here; otherwise MinIO treats "health" as a bucket (403 AccessDenied).
+                if ! grep -qE 'location = /health' "$f"; then
+                    _tmp_hf=$(mktemp)
+                    awk '/# Proxy locations \(auto-generated from service registry\)/ && !done {
+                        print
+                        print "    location = /health {"
+                        print "        access_log off;"
+                        print "        default_type text/plain;"
+                        print "        return 200 \"ok\\n\";"
+                        print "    }"
+                        print ""
+                        done=1
+                        next
+                    }
+                    { print }' "$f" > "$_tmp_hf" && mv "$_tmp_hf" "$f"
+                fi
                 rm -f "${f}.bak"
-                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name + /minio strip)${NC}"
+                echo -e "${GREEN}✓ Patched $(basename "$f") for MinIO SigV4 (include + proxy_pass + server_name + /minio strip + /health)${NC}"
             fi
         done
         if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^nginx-microservice$'; then
