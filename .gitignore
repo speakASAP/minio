@@ -31,3 +31,9 @@ temp/
 
 # Docker
 docker-compose.override.yml
+
+# Kubernetes / local credentials
+k8s/secret.yaml
+secrets/
+**/client_secret*.json
+**/*.apps.googleusercontent.com.json
