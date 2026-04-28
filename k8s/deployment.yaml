@@ -24,18 +24,24 @@ spec:
       containers:
         - name: app
           image: localhost:5000/minio-microservice:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
+          command: ["minio", "server", "/data", "--console-address", ":9001"]
           ports:
             - containerPort: 9000
               name: http
-          envFrom:
-            - configMapRef:
-                name: minio-microservice-config
-            - secretRef:
-                name: minio-microservice-secret
+            - containerPort: 9001
+              name: console
+          env:
+            - name: MINIO_ROOT_USER
+              value: "minioadmin"
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: minio-microservice-secret
+                  key: MINIO_ROOT_PASSWORD
           livenessProbe:
             httpGet:
-              path: /health
+              path: /minio/health/live
               port: 9000
             initialDelaySeconds: 15
             periodSeconds: 30
@@ -43,7 +49,7 @@ spec:
             timeoutSeconds: 5
           readinessProbe:
             httpGet:
-              path: /health
+              path: /minio/health/live
               port: 9000
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -56,3 +62,11 @@ spec:
             limits:
               memory: "512Mi"
               cpu: "500m"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          hostPath:
+            path: /srv/speakasap-records
+            type: DirectoryOrCreate
