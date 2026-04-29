@@ -31,7 +31,6 @@ if [ -z "${MINIO_ENDPOINT:-}" ]; then
   # Prefer nginx-microservice state (same logic as deploy.sh paths)
   for NGINX_STATE in "/home/statex/nginx-microservice/state/minio-microservice.json" \
                      "/home/alfares/nginx-microservice/state/minio-microservice.json" \
-                     "/home/belunga/nginx-microservice/state/minio-microservice.json" \
                      "$HOME/nginx-microservice/state/minio-microservice.json" \
                      "$(dirname "$PROJECT_ROOT")/nginx-microservice/state/minio-microservice.json"; do
     if [ -f "$NGINX_STATE" ] && command -v jq >/dev/null 2>&1; then
