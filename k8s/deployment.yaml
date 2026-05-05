@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: app
-          image: localhost:5000/minio-microservice:latest
+          image: minio/minio:latest
           imagePullPolicy: Always
           command: ["minio", "server", "/data", "--console-address", ":9001"]
           ports:
