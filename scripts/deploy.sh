@@ -23,11 +23,43 @@ IMAGE="${REGISTRY}/${SERVICE_NAME}:${IMAGE_TAG}"
 IMAGE_LATEST="${REGISTRY}/${SERVICE_NAME}:latest"
 BUILD_IMAGE="${BUILD_IMAGE:-0}"
 
+preflight_service_health() {
+  echo -e "${YELLOW}Preflight: checking Kubernetes and current service health...${NC}"
+
+  if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+    echo -e "${RED}Namespace not found: $NAMESPACE${NC}"
+    exit 1
+  fi
+
+  if ! kubectl get nodes >/dev/null 2>&1; then
+    echo -e "${RED}kubectl cannot reach cluster${NC}"
+    exit 1
+  fi
+
+  BAD_PODS=$(kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" --no-headers 2>/dev/null | awk '$3 ~ /Error|CrashLoopBackOff|ImagePullBackOff|CreateContainerConfigError|CreateContainerError|ErrImagePull/ {print $1}')
+  if [ -n "$BAD_PODS" ]; then
+    echo -e "${RED}Service has unhealthy pods before deploy:${NC}"
+    kubectl get pods -n "$NAMESPACE" -l app="$SERVICE_NAME" -o wide || true
+    for pod in $BAD_PODS; do
+      echo -e "${YELLOW}--- describe pod/$pod ---${NC}"
+      kubectl describe pod -n "$NAMESPACE" "$pod" || true
+      echo -e "${YELLOW}--- logs pod/$pod (tail 80) ---${NC}"
+      kubectl logs -n "$NAMESPACE" "$pod" --tail=80 || true
+    done
+    echo -e "${RED}Fix pod errors first, then redeploy.${NC}"
+    exit 1
+  fi
+
+  echo -e "${GREEN}Preflight passed${NC}"
+}
+
 echo -e "${BLUE}"
 echo "=========================================================="
 echo "  MinIO Microservice - Kubernetes Deployment"
 echo "=========================================================="
 echo -e "${NC}"
+
+preflight_service_health
 
 if [ "$BUILD_IMAGE" = "1" ]; then
   echo -e "${YELLOW}[1/6] Building images: ${IMAGE} and ${IMAGE_LATEST}...${NC}"
@@ -62,7 +94,18 @@ else
 fi
 
 echo -e "${YELLOW}[5/6] Waiting for rollout...${NC}"
-kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s
+if ! kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s; then
+  echo -e "${YELLOW}Rollout did not complete in time. Diagnosing terminating pods...${NC}"
+  kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} -o wide || true
+  TERMINATING_PODS=$(kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} --no-headers 2>/dev/null | awk '$3=="Terminating"{print $1}')
+  if [ -n "$TERMINATING_PODS" ]; then
+    echo -e "${YELLOW}Force deleting stuck terminating pods...${NC}"
+    for pod in $TERMINATING_PODS; do
+      kubectl delete pod -n "${NAMESPACE}" "$pod" --grace-period=0 --force || true
+    done
+  fi
+  kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s
+fi
 echo -e "${GREEN}OK Rollout complete${NC}"
 
 echo -e "${YELLOW}[6/6] Health check...${NC}"
