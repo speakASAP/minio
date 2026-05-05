@@ -7,10 +7,9 @@
 ## minio-microservice
 
 **Purpose**: S3-compatible object storage for lesson recordings and file artifacts. Private bucket with presigned URL access — no anonymous reads.  
-**API ports**: 9000 (blue) · 9002 (green)  
-**Console ports**: 9001 (blue) · 9003 (green)  
+**API port**: 9000 · **Console port**: 9001  
 **Domain**: https://minio.alfares.cz  
-**Stack**: MinIO · Docker
+**Stack**: MinIO · Kubernetes (`statex-apps`)
 
 ### Key constraints
 - All objects are private — access only via presigned URLs, never public
@@ -21,4 +20,4 @@
 ### Consumers
 speakasap-portal (lesson recordings), business-orchestrator (task artifacts).
 
-**Ops**: `docker compose logs -f` · `./scripts/deploy.sh`
+**Ops**: `kubectl logs -n statex-apps -l app=minio-microservice -f` · `kubectl rollout restart deployment/minio-microservice -n statex-apps` · `./scripts/deploy.sh`
