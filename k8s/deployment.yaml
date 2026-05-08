@@ -39,6 +39,11 @@ spec:
                 secretKeyRef:
                   name: minio-microservice-secret
                   key: MINIO_ROOT_PASSWORD
+            - name: MINIO_API_CORS_ALLOW_ORIGIN
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-microservice-config
+                  key: RECORDS_CORS_ORIGINS
           livenessProbe:
             httpGet:
               path: /minio/health/live
