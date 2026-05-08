@@ -202,12 +202,12 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 
 ## Browser Presigned Uploads (CORS)
 
-Browser `PUT` uploads to MinIO require bucket-level S3 CORS (ingress headers alone are not enough).
+For OSS MinIO, browser CORS is configured globally via MinIO API config (not bucket-level `PutBucketCors`).
 
 - Allowed origins are configured by `RECORDS_CORS_ORIGINS` (comma-separated), default:
   - `https://speakasap.com,https://www.speakasap.com`
-- K8s deploy applies CORS via `k8s/cors-job.yaml` on every deploy, idempotently.
-- Manual apply (if needed): `./scripts/set-bucket-cors.sh`
+- Deployment maps `RECORDS_CORS_ORIGINS` to `MINIO_API_CORS_ALLOW_ORIGIN`.
+- Manual apply (if needed): `./scripts/set-bucket-cors.sh` (sets `api.cors_allow_origin`).
 
 ## Standards
 

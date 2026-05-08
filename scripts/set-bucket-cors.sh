@@ -81,7 +81,6 @@ trap 'rm -f "$TMP_XML"' EXIT
     echo '    <AllowedMethod>GET</AllowedMethod>'
     echo '    <AllowedMethod>PUT</AllowedMethod>'
     echo '    <AllowedMethod>HEAD</AllowedMethod>'
-    echo '    <AllowedMethod>OPTIONS</AllowedMethod>'
     echo '    <AllowedHeader>*</AllowedHeader>'
     echo '    <ExposeHeader>ETag</ExposeHeader>'
     echo '    <ExposeHeader>Content-Length</ExposeHeader>'
@@ -92,6 +91,7 @@ trap 'rm -f "$TMP_XML"' EXIT
     echo '</CORSConfiguration>'
 } > "$TMP_XML"
 
-echo "[minio] Applying bucket CORS on ${BUCKET} (origins: ${ORIGINS_RAW})..."
-"$MC_CMD" cors set "${ALIAS}/${BUCKET}" "$TMP_XML"
-echo "[minio] CORS applied. Browsers may PUT/GET with presigned URLs from those origins."
+echo "[minio] Applying CORS origins for OSS MinIO (global api.cors_allow_origin) ..."
+"$MC_CMD" admin config set "${ALIAS}" api cors_allow_origin="${ORIGINS_RAW}"
+echo "[minio] Applied api.cors_allow_origin=${ORIGINS_RAW}"
+echo "[minio] Note: OSS MinIO does not support bucket-level PutBucketCors; this sets global API CORS."
