@@ -75,3 +75,10 @@ echo "[minio] Disabling public access on bucket ${BUCKET}..."
 "$MC_CMD" anonymous set none "${ALIAS}/${BUCKET}" 2>/dev/null || true
 
 echo "[minio] Bucket ${BUCKET} is ready. All access via presigned URLs or IAM only."
+
+if [ "${SKIP_BUCKET_CORS:-0}" != "1" ] && [ -x "${SCRIPT_DIR}/set-bucket-cors.sh" ]; then
+    echo "[minio] Applying browser CORS (presigned GET/PUT). Set SKIP_BUCKET_CORS=1 to skip."
+    "${SCRIPT_DIR}/set-bucket-cors.sh" || {
+        echo "[minio] WARNING: set-bucket-cors.sh failed. Run ./scripts/set-bucket-cors.sh after fixing mc/.env."
+    }
+fi
