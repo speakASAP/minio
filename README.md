@@ -200,6 +200,15 @@ Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (pytho
 * See [docs/INTEGRATION.md](docs/INTEGRATION.md) for S3 API usage (PUT, presigned GET) and key layout.
 * Implementation plan: [docs/MIGRATION_NFS_TO_S3_IMPLEMENTATION_PLAN.md](docs/MIGRATION_NFS_TO_S3_IMPLEMENTATION_PLAN.md).
 
+## Browser Presigned Uploads (CORS)
+
+Browser `PUT` uploads to MinIO require bucket-level S3 CORS (ingress headers alone are not enough).
+
+- Allowed origins are configured by `RECORDS_CORS_ORIGINS` (comma-separated), default:
+  - `https://speakasap.com,https://www.speakasap.com`
+- K8s deploy applies CORS via `k8s/cors-job.yaml` on every deploy, idempotently.
+- Manual apply (if needed): `./scripts/set-bucket-cors.sh`
+
 ## Standards
 
 * Follows project README/CREATE_SERVICE conventions: README, docs/, .env.example, scripts.
