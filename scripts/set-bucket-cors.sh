@@ -14,30 +14,27 @@ if [ -f "/srv/minio/.env" ]; then
     ENV_FILE=/srv/minio/.env
 fi
 
-if [ ! -f "$ENV_FILE" ]; then
-    echo "Error: .env not found. Copy .env.example to .env and set MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET."
-    exit 1
+if [ -f "$ENV_FILE" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        line="${line%$'\r'}"
+        line="${line%%#*}"
+        line="${line%"${line##*[![:space:]]}"}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        [[ -z "$line" ]] && continue
+        if [[ "$line" == *=* ]]; then
+            key="${line%%=*}"
+            key="${key%"${key##*[![:space:]]}"}"
+            val="${line#*=}"
+            val="${val#"${val%%[![:space:]]*}"}"
+            val="${val%"${val##*[![:space:]]}"}"
+            val="${val%$'\r'}"
+            if [[ "$val" == \"*\" ]]; then val="${val%\"}"; val="${val#\"}"; fi
+            if [[ "$val" == \'*\' ]]; then val="${val%\'}"; val="${val#\'}"; fi
+            printf -v "$key" %s "$val"
+            export "$key"
+        fi
+    done < "$ENV_FILE"
 fi
-
-while IFS= read -r line || [ -n "$line" ]; do
-    line="${line%$'\r'}"
-    line="${line%%#*}"
-    line="${line%"${line##*[![:space:]]}"}"
-    line="${line#"${line%%[![:space:]]*}"}"
-    [[ -z "$line" ]] && continue
-    if [[ "$line" == *=* ]]; then
-        key="${line%%=*}"
-        key="${key%"${key##*[![:space:]]}"}"
-        val="${line#*=}"
-        val="${val#"${val%%[![:space:]]*}"}"
-        val="${val%"${val##*[![:space:]]}"}"
-        val="${val%$'\r'}"
-        if [[ "$val" == \"*\" ]]; then val="${val%\"}"; val="${val#\"}"; fi
-        if [[ "$val" == \'*\' ]]; then val="${val%\'}"; val="${val#\'}"; fi
-        printf -v "$key" %s "$val"
-        export "$key"
-    fi
-done < "$ENV_FILE"
 
 BUCKET="${RECORDS_BUCKET:-speakasap-records}"
 # Comma-separated list of allowed Origins for browser PUT/GET (HTTPS).
@@ -45,8 +42,8 @@ ORIGINS_RAW="${RECORDS_CORS_ORIGINS:-https://speakasap.com,https://www.speakasap
 
 ENDPOINT="${MINIO_ENDPOINT:-http://127.0.0.1:9000}"
 
-if [ -z "$MINIO_ROOT_USER" ] || [ -z "$MINIO_ROOT_PASSWORD" ]; then
-    echo "Error: MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set in .env"
+if [ -z "${MINIO_ROOT_USER:-}" ] || [ -z "${MINIO_ROOT_PASSWORD:-}" ]; then
+    echo "Error: MINIO_ROOT_USER and MINIO_ROOT_PASSWORD must be set via environment or .env"
     exit 1
 fi
 

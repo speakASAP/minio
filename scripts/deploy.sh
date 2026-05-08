@@ -74,15 +74,16 @@ else
   echo -e "${YELLOW}[1/6] Skipping Docker build/push (BUILD_IMAGE=${BUILD_IMAGE})${NC}"
 fi
 
-echo -e "${YELLOW}[3/6] Applying Kubernetes manifests...${NC}"
+echo -e "${YELLOW}[3/7] Applying Kubernetes manifests...${NC}"
 kubectl apply -f "$PROJECT_ROOT/k8s/configmap.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/external-secret.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/service.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/ingress.yaml"
+kubectl apply -f "$PROJECT_ROOT/k8s/cors-job.yaml"
 echo -e "${GREEN}OK Kubernetes manifests applied${NC}"
 
-echo -e "${YELLOW}[4/6] Triggering deployment update...${NC}"
+echo -e "${YELLOW}[4/7] Triggering deployment update...${NC}"
 if [ "$BUILD_IMAGE" = "1" ]; then
   kubectl set image deployment/${SERVICE_NAME} \
     app="${IMAGE}" \
@@ -93,7 +94,7 @@ else
   echo -e "${GREEN}OK Deployment rollout restart triggered${NC}"
 fi
 
-echo -e "${YELLOW}[5/6] Waiting for rollout...${NC}"
+echo -e "${YELLOW}[5/7] Waiting for rollout...${NC}"
 if ! kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s; then
   echo -e "${YELLOW}Rollout did not complete in time. Diagnosing terminating pods...${NC}"
   kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} -o wide || true
@@ -108,7 +109,13 @@ if ! kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeo
 fi
 echo -e "${GREEN}OK Rollout complete${NC}"
 
-echo -e "${YELLOW}[6/6] Health check...${NC}"
+echo -e "${YELLOW}[6/7] Reapplying bucket CORS job...${NC}"
+kubectl delete job minio-microservice-cors -n "${NAMESPACE}" --ignore-not-found >/dev/null
+kubectl apply -f "$PROJECT_ROOT/k8s/cors-job.yaml" >/dev/null
+kubectl wait --for=condition=complete --timeout=120s job/minio-microservice-cors -n "${NAMESPACE}"
+echo -e "${GREEN}OK Bucket CORS job completed${NC}"
+
+echo -e "${YELLOW}[7/7] Health check...${NC}"
 POD_READY="$(kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].status.containerStatuses[0].ready}')"
 if [ "${POD_READY}" != "true" ]; then
   echo -e "${RED}ERROR Pod is not ready${NC}"

@@ -8,6 +8,7 @@ metadata:
     managed-by: k8s-migration
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
 spec:
   ingressClassName: traefik
   tls:
