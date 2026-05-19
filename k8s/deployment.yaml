@@ -23,8 +23,8 @@ spec:
     spec:
       containers:
         - name: app
-          image: minio/minio:latest
-          imagePullPolicy: Always
+          image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+          imagePullPolicy: IfNotPresent
           command: ["minio", "server", "/data", "--console-address", ":9001"]
           ports:
             - containerPort: 9000
@@ -44,11 +44,17 @@ spec:
                 configMapKeyRef:
                   name: minio-microservice-config
                   key: RECORDS_CORS_ORIGINS
+          startupProbe:
+            httpGet:
+              path: /minio/health/live
+              port: 9000
+            failureThreshold: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /minio/health/live
               port: 9000
-            initialDelaySeconds: 15
             periodSeconds: 30
             failureThreshold: 3
             timeoutSeconds: 5
