@@ -10,6 +10,12 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# shellcheck disable=SC1091
+source "$(dirname "$PROJECT_ROOT")/shared/scripts/load-deploy-phase-timing.sh" "$PROJECT_ROOT" 2>/dev/null \
+  || source "$HOME/Documents/Github/shared/scripts/load-deploy-phase-timing.sh" "$PROJECT_ROOT" \
+  || { echo "Error: deploy timing library not found" >&2; exit 1; }
+deploy_timing_init "minio-microservice"
+
 SERVICE_NAME="minio-microservice"
 REGISTRY="localhost:5000"
 NAMESPACE="statex-apps"
@@ -59,69 +65,47 @@ echo "  MinIO Microservice - Kubernetes Deployment"
 echo "=========================================================="
 echo -e "${NC}"
 
-preflight_service_health
+deploy_timing_run_phase "Preflight" preflight_service_health
 
 if [ "$BUILD_IMAGE" = "1" ]; then
-  echo -e "${YELLOW}[1/6] Building images: ${IMAGE} and ${IMAGE_LATEST}...${NC}"
+  deploy_timing_phase_start "Build images"
   docker build -t "$IMAGE" -t "$IMAGE_LATEST" "$PROJECT_ROOT"
-  echo -e "${GREEN}OK Images built${NC}"
-
-  echo -e "${YELLOW}[2/6] Pushing to registry...${NC}"
+  deploy_timing_phase_end "Build images"
+  deploy_timing_phase_start "Push images"
   docker push "$IMAGE"
   docker push "$IMAGE_LATEST"
-  echo -e "${GREEN}OK Images pushed: ${IMAGE}, ${IMAGE_LATEST}${NC}"
-else
-  echo -e "${YELLOW}[1/6] Skipping Docker build/push (BUILD_IMAGE=${BUILD_IMAGE})${NC}"
+  deploy_timing_phase_end "Push images"
 fi
 
-echo -e "${YELLOW}[3/6] Applying Kubernetes manifests...${NC}"
+deploy_timing_phase_start "Apply Kubernetes manifests"
 kubectl apply -f "$PROJECT_ROOT/k8s/configmap.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/external-secret.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/service.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/ingress.yaml"
-echo -e "${GREEN}OK Kubernetes manifests applied${NC}"
+deploy_timing_phase_end "Apply Kubernetes manifests"
 
-echo -e "${YELLOW}[4/6] Triggering deployment update...${NC}"
+deploy_timing_phase_start "Trigger deployment update"
 if [ "$BUILD_IMAGE" = "1" ]; then
-  kubectl set image deployment/${SERVICE_NAME} \
-    app="${IMAGE}" \
-    -n "${NAMESPACE}"
-  echo -e "${GREEN}OK Deployment updated (app=${IMAGE})${NC}"
+  kubectl set image deployment/${SERVICE_NAME} app="${IMAGE}" -n "${NAMESPACE}"
 else
   kubectl rollout restart deployment/${SERVICE_NAME} -n "${NAMESPACE}"
-  echo -e "${GREEN}OK Deployment rollout restart triggered${NC}"
 fi
+deploy_timing_phase_end "Trigger deployment update"
 
-echo -e "${YELLOW}[5/6] Waiting for rollout...${NC}"
-if ! kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s; then
-  echo -e "${YELLOW}Rollout did not complete in time. Diagnosing terminating pods...${NC}"
-  kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} -o wide || true
-  TERMINATING_PODS=$(kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} --no-headers 2>/dev/null | awk '$3=="Terminating"{print $1}')
-  if [ -n "$TERMINATING_PODS" ]; then
-    echo -e "${YELLOW}Force deleting stuck terminating pods...${NC}"
-    for pod in $TERMINATING_PODS; do
-      kubectl delete pod -n "${NAMESPACE}" "$pod" --grace-period=0 --force || true
-    done
-  fi
-  kubectl rollout status deployment/${SERVICE_NAME} -n "${NAMESPACE}" --timeout=120s
-fi
-echo -e "${GREEN}OK Rollout complete${NC}"
+deploy_timing_phase_start "Wait for rollout"
+deploy_timing_k8s_rollout_wait kubectl "$SERVICE_NAME" "$NAMESPACE"
+deploy_timing_phase_end "Wait for rollout"
 
-echo -e "${YELLOW}[6/6] Health check...${NC}"
+deploy_timing_phase_start "Health check"
 POD_READY="$(kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME} --sort-by=.metadata.creationTimestamp -o jsonpath='{.items[-1:].status.containerStatuses[0].ready}')"
 if [ "${POD_READY}" != "true" ]; then
-  echo -e "${RED}ERROR Pod is not ready${NC}"
   kubectl get pods -n "${NAMESPACE}" -l app=${SERVICE_NAME}
   exit 1
 fi
-echo -e "\n${GREEN}OK Health check passed${NC}"
+deploy_timing_phase_end "Health check"
 
-echo -e "${GREEN}"
-echo "=========================================================="
-echo "  MinIO Microservice Deployment successful"
-echo "  Image: ${IMAGE}"
-echo "  Namespace: ${NAMESPACE}"
-echo "  Pods: $(kubectl get pods -n ${NAMESPACE} -l app=${SERVICE_NAME} --no-headers | wc -l) running"
-echo "=========================================================="
-echo -e "${NC}"
+deploy_timing_finish_success "MinIO Microservice"
+echo "Image: ${IMAGE}"
+DEPLOY_TIMING_FINISHED=1
+exit 0
