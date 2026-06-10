@@ -9,7 +9,7 @@
 **Query the RAG before reading source files** — saves 2000-5000 tokens per answer.
 
 ```bash
-kubectl -n statex-apps exec deployment/business-orchestrator -- curl -s -X POST http://docs-rag-microservice:3397/retrieval/agent-context \
+kubectl -n statex-apps exec deployment/minio-microservice -- curl -s -X POST http://docs-rag-microservice:3397/retrieval/agent-context \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $(cat ~/.claude/rag-token)" \
   -d '{"query": "YOUR QUESTION HERE", "maxTokens": 3000}'
@@ -34,7 +34,7 @@ kubectl -n statex-apps exec deployment/business-orchestrator -- curl -s -X POST 
 
 ### Consumers
 
-speakasap-portal (lesson recordings), business-orchestrator (task artifacts).
+speakasap-portal (lesson recordings), runlayer (task artifacts).
 
 docker compose logs -f
 
