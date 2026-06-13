@@ -1,0 +1,83 @@
+nodes:
+  - id: GOAL-PRIVATE-STORAGE
+    type: Goal
+    path: ../01_vision/VISION.md
+  - id: ADR-001
+    type: ADR
+    path: ../07_decisions/ADR-001-adopt-intent-preservation-system.md
+  - id: SYS-001
+    type: System
+    path: ../04_systems/SYS-001-private-object-storage.md
+  - id: FEAT-001
+    type: Feature
+    path: ../10_features/FEAT-001-private-recording-storage.md
+  - id: FEAT-002
+    type: Feature
+    path: ../10_features/FEAT-002-presigned-access-boundary.md
+  - id: TASK-001
+    type: Task
+    path: ../11_tasks/TASK-001-ips-documentation-bootstrap.md
+  - id: TASK-002
+    type: Task
+    path: ../11_tasks/TASK-002-review-presigned-url-ttl-settings.md
+  - id: EP-TASK-001
+    type: ExecutionPlan
+    path: ../21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md
+  - id: EP-TASK-002
+    type: ExecutionPlan
+    path: ../21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md
+  - id: CP-TASK-001
+    type: ContextPackage
+    path: ../13_context_packages/CP-TASK-001-ips-documentation-bootstrap.md
+  - id: PROMPT-TASK-001-ips-documentation-bootstrap
+    type: CodingPrompt
+    path: ../14_prompts/PROMPT-TASK-001-ips-documentation-bootstrap.md
+  - id: VAL-TASK-001-ips-documentation-bootstrap
+    type: ValidationReport
+    path: ../12_validation/VAL-TASK-001-ips-documentation-bootstrap.md
+edges:
+  - from: SYS-001
+    type: impacts_goal
+    to: GOAL-PRIVATE-STORAGE
+  - from: FEAT-001
+    type: implements
+    to: SYS-001
+  - from: FEAT-002
+    type: implements
+    to: SYS-001
+  - from: TASK-001
+    type: impacts_goal
+    to: GOAL-PRIVATE-STORAGE
+  - from: TASK-001
+    type: implements
+    to: FEAT-001
+  - from: TASK-002
+    type: impacts_goal
+    to: GOAL-PRIVATE-STORAGE
+  - from: TASK-002
+    type: implements
+    to: FEAT-002
+  - from: EP-TASK-001
+    type: derives_from
+    to: TASK-001
+  - from: EP-TASK-001
+    type: generates
+    to: PROMPT-TASK-001-ips-documentation-bootstrap
+  - from: EP-TASK-001
+    type: constrained_by
+    to: ADR-001
+  - from: EP-TASK-002
+    type: derives_from
+    to: TASK-002
+  - from: EP-TASK-002
+    type: constrained_by
+    to: ADR-001
+  - from: PROMPT-TASK-001-ips-documentation-bootstrap
+    type: derives_from
+    to: EP-TASK-001
+  - from: PROMPT-TASK-001-ips-documentation-bootstrap
+    type: included_in_context
+    to: CP-TASK-001
+  - from: VAL-TASK-001-ips-documentation-bootstrap
+    type: validates
+    to: TASK-001
