@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-06-13T18:23:05Z",
+  "created_at": "2026-06-13T21:18:45Z",
   "gate": "deployment_readiness",
   "next_step": "ready_for_deployment_review",
   "pre_coding_gate": {
@@ -19,8 +19,83 @@
     "score": 100,
     "status": "PASS"
   },
-  "target": "TASK-001",
+  "target": "TASK-002",
   "unresolved_markers": [
+    {
+      "line": 56,
+      "marker": "[MISSING: effective TTL source]",
+      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 58,
+      "marker": "[MISSING: safe credentials/approval]",
+      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 65,
+      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
+      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 66,
+      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
+      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 67,
+      "marker": "[MISSING: safe credentials/approval]",
+      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 72,
+      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
+      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 73,
+      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
+      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 74,
+      "marker": "[MISSING: safe credentials/approval]",
+      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 69,
+      "marker": "[MISSING: ...]",
+      "path": "21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md"
+    },
+    {
+      "line": 69,
+      "marker": "[MISSING: ...]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 70,
+      "marker": "[MISSING: ...]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 71,
+      "marker": "[MISSING: safe credentials/approval]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 80,
+      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 81,
+      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
+    {
+      "line": 82,
+      "marker": "[MISSING: safe credentials/approval]",
+      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+    },
     {
       "line": 16,
       "marker": "[MISSING: ...]",
@@ -79,12 +154,15 @@
   ],
   "validation_reports": {
     "matching_reports": [
-      "12_validation/VAL-TASK-001-ips-documentation-bootstrap.md"
+      "12_validation/VAL-TASK-001-ips-documentation-bootstrap.md",
+      "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
     ],
     "reports": [
-      "12_validation/VAL-TASK-001-ips-documentation-bootstrap.md"
+      "12_validation/VAL-TASK-001-ips-documentation-bootstrap.md",
+      "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md",
+      "12_validation/VAL-TASK-003-customer-web-surface.md"
     ],
     "status": "pass",
-    "target": "TASK-001"
+    "target": "TASK-002"
   }
 }

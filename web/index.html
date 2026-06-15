@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alfares Object Storage</title>
+  <meta name="description" content="Private S3-compatible object storage for Alfares ecosystem applications and customer workloads." />
+  <link rel="icon" href="data:," />
+  <link rel="stylesheet" href="/styles.css?v=20260613-auth-body-validate" />
+</head>
+<body data-page="landing">
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Alfares Object Storage home"><span class="brand-mark">A</span><span>Alfares Object Storage</span></a>
+    <nav class="nav" aria-label="Primary navigation"><a href="/#pricing">Pricing</a><a href="/#register">Register</a><a href="/client/">Client</a><a href="/admin/">Admin</a></nav>
+    <button class="icon-button menu-button" type="button" aria-label="Open navigation" data-menu-toggle>☰</button>
+  </header>
+  <main>
+    <section id="landing" class="hero section-grid">
+      <div class="hero-copy">
+        <h1>Private S3 storage for applications that cannot leak data.</h1>
+        <p>Managed MinIO-backed object storage with private buckets, presigned access boundaries, operational diagnostics, and onboarding paths for every application in the Alfares ecosystem.</p>
+        <div class="hero-actions"><a class="button primary" href="#register">Start with a storage consultation</a><a class="button secondary" href="#pricing">View pricing</a></div>
+        <dl class="proof-strip" aria-label="Service guarantees"><div><dt>Access model</dt><dd>Private buckets</dd></div><div><dt>Protocol</dt><dd>S3 compatible</dd></div><div><dt>Delivery</dt><dd>Presigned URLs</dd></div></dl>
+      </div>
+      <div class="product-preview" aria-label="Storage operations preview">
+        <div class="preview-head"><span>Storage operations</span><strong>Healthy</strong></div>
+        <div class="metric-grid"><div><span>Objects</span><strong>184,920</strong></div><div><span>Used</span><strong>4.8 TB</strong></div><div><span>Uptime</span><strong>99.98%</strong></div><div><span>Consumers</span><strong>12</strong></div></div>
+        <div class="flow-list"><div><b>speakasap-portal</b><span>PUT /speakasap-records/YYYY/MM/DD</span></div><div><b>customer-app-7</b><span>GET presigned object, TTL 1h</span></div><div><b>diagnostics</b><span>SigV4 headers preserved</span></div></div>
+      </div>
+    </section>
+    <section class="section band" id="pricing">
+      <div class="section-title"><h2>Pricing that starts with the right storage boundary.</h2><p>Every plan includes private buckets, S3 endpoint access, CORS review, diagnostics, and administrator visibility.</p></div>
+      <div class="pricing-grid"><article class="price-card"><h3>Launch</h3><p>For one application moving from local files to object storage.</p><strong>Consultation first</strong><ul><li>1 application profile</li><li>Private bucket mapping</li><li>Presigned URL setup review</li></ul><a class="button secondary" href="#register">Request Launch</a></article><article class="price-card featured"><h3>Platform</h3><p>For product teams with several services consuming shared storage.</p><strong>Usage based</strong><ul><li>Multiple application profiles</li><li>Usage and health dashboards</li><li>Operational alert review</li></ul><a class="button primary" href="#register">Request Platform</a></article><article class="price-card"><h3>Dedicated</h3><p>For strict isolation, custom retention, and high-volume workloads.</p><strong>Custom</strong><ul><li>Dedicated policy review</li><li>Custom CORS and TTL rules</li><li>Runbook and audit support</li></ul><a class="button secondary" href="#register">Talk to us</a></article></div>
+    </section>
+    <section class="section split" id="register">
+      <div><h2>Register interest through Leads, then create your customer account.</h2><p>The intake flow records the commercial request first. After the lead is accepted, the account is created through the central Auth service so MinIO never collects passwords locally.</p></div>
+      <form class="panel form-panel" data-lead-form><label>Name<input name="name" autocomplete="name" required /></label><label>Work email<input name="email" type="email" autocomplete="email" required /></label><label>Company<input name="company" autocomplete="organization" /></label><label>Storage need<textarea name="message" rows="4" required>We want to connect an application to Alfares Object Storage.</textarea></label><label class="check"><input name="marketingConsent" type="checkbox" /> I agree to receive follow-up about this storage request.</label><div class="form-actions"><button class="button primary" type="submit">Submit lead request</button><button class="button secondary" type="button" data-auth-register data-auth-target="/client/">Create Auth account</button></div><p class="form-status" role="status" data-lead-status></p></form>
+    </section>
+  </main>
+  <script src="/app.js?v=20260613-auth-body-validate" defer></script>
+</body>
+</html>

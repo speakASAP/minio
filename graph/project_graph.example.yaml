@@ -35,6 +35,33 @@ nodes:
   - id: VAL-TASK-001-ips-documentation-bootstrap
     type: ValidationReport
     path: ../12_validation/VAL-TASK-001-ips-documentation-bootstrap.md
+  - id: FEAT-004
+    type: Feature
+    path: ../10_features/FEAT-004-customer-web-surface.md
+  - id: TASK-003
+    type: Task
+    path: ../11_tasks/TASK-003-customer-web-surface.md
+  - id: EP-TASK-003
+    type: ExecutionPlan
+    path: ../21_execution_plans/EP-TASK-003-customer-web-surface.md
+  - id: CP-TASK-003
+    type: ContextPackage
+    path: ../13_context_packages/CP-TASK-003-customer-web-surface.md
+  - id: PROMPT-TASK-003-customer-web-surface
+    type: CodingPrompt
+    path: ../14_prompts/PROMPT-TASK-003-customer-web-surface.md
+  - id: VAL-TASK-003-customer-web-surface
+    type: ValidationReport
+    path: ../12_validation/VAL-TASK-003-customer-web-surface.md
+  - id: CP-TASK-002
+    type: ContextPackage
+    path: ../13_context_packages/CP-TASK-002-review-presigned-url-ttl-settings.md
+  - id: PROMPT-TASK-002-review-presigned-url-ttl-settings
+    type: CodingPrompt
+    path: ../14_prompts/PROMPT-TASK-002-review-presigned-url-ttl-settings.md
+  - id: VAL-TASK-002-review-presigned-url-ttl-settings
+    type: ValidationReport
+    path: ../12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md
 edges:
   - from: SYS-001
     type: impacts_goal
@@ -81,3 +108,45 @@ edges:
   - from: VAL-TASK-001-ips-documentation-bootstrap
     type: validates
     to: TASK-001
+  - from: FEAT-004
+    type: implements
+    to: SYS-001
+  - from: TASK-003
+    type: impacts_goal
+    to: GOAL-PRIVATE-STORAGE
+  - from: TASK-003
+    type: implements
+    to: FEAT-004
+  - from: TASK-003
+    type: decomposes_into
+    to: EP-TASK-003
+  - from: EP-TASK-003
+    type: derives_from
+    to: TASK-003
+  - from: EP-TASK-003
+    type: generates
+    to: PROMPT-TASK-003-customer-web-surface
+  - from: EP-TASK-003
+    type: constrained_by
+    to: ADR-001
+  - from: PROMPT-TASK-003-customer-web-surface
+    type: derives_from
+    to: EP-TASK-003
+  - from: PROMPT-TASK-003-customer-web-surface
+    type: included_in_context
+    to: CP-TASK-003
+  - from: VAL-TASK-003-customer-web-surface
+    type: validates
+    to: TASK-003
+  - from: EP-TASK-002
+    type: generates
+    to: PROMPT-TASK-002-review-presigned-url-ttl-settings
+  - from: PROMPT-TASK-002-review-presigned-url-ttl-settings
+    type: derives_from
+    to: EP-TASK-002
+  - from: PROMPT-TASK-002-review-presigned-url-ttl-settings
+    type: included_in_context
+    to: CP-TASK-002
+  - from: VAL-TASK-002-review-presigned-url-ttl-settings
+    type: validates
+    to: TASK-002

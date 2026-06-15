@@ -83,6 +83,12 @@ kubectl apply -f "$PROJECT_ROOT/k8s/external-secret.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/service.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/ingress.yaml"
+if [ -d "$PROJECT_ROOT/k8s/web" ]; then
+  kubectl apply -f "$PROJECT_ROOT/k8s/web/configmap.yaml"
+  kubectl apply -f "$PROJECT_ROOT/k8s/web/deployment.yaml"
+  kubectl apply -f "$PROJECT_ROOT/k8s/web/service.yaml"
+  kubectl apply -f "$PROJECT_ROOT/k8s/web/ingress.yaml"
+fi
 deploy_timing_phase_end "Apply Kubernetes manifests"
 
 deploy_timing_phase_start "Trigger deployment update"

@@ -170,6 +170,21 @@ Optional: `S3_TEST_VERBOSE=1 ./scripts/test-s3-signature.sh` prints endpoint and
 
 Uses system python3+boto3, or repo venv `.venv-signature-test`, or Docker (python:3.11-slim) if boto3 is not installed.
 
+## Customer Web Surface
+
+The customer and administrator web UI is implemented as a separate static surface under `web/` and is served from `https://storage.alfares.cz`: landing at `/`, client dashboard at `/client/`, and admin panel at `/admin/`. Do not serve the landing page from `https://minio.alfares.cz/`: that host root remains the S3 path-style endpoint and must preserve SigV4 host, path, authorization, and method semantics.
+
+The first web implementation includes:
+
+* Landing page with pricing, conversion copy, and consultation CTA.
+* Leads intake form posting to `https://leads.alfares.cz/api/leads/submit` with `sourceService=minio-microservice`.
+* Auth registration/login handoff through `https://auth.alfares.cz` with `client_id=minio-microservice`.
+* Customer dashboard at `/client/` for application onboarding drafts and safe S3 connection parameters.
+* Admin panel at `/admin/` that hides operational data until Auth `/auth/validate` returns `global:superadmin`, `app:minio-microservice:admin`, or `internal:minio-microservice:admin`.
+* Mock customer/admin metrics only; real object inventory, usage and settings require a protected backend wrapper.
+
+Privileged MinIO object inventory, bucket mutation, credential issuance, and real storage metrics require a protected backend wrapper. The static browser UI intentionally does not expose MinIO root credentials, raw access tokens, private object inventories, or production presigned URLs.
+
 ## Configuration
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).

@@ -60,6 +60,19 @@ Only files named in the task scope.
 4. Run gates and relevant service checks.
 5. Record validation evidence.
 
+## Parallel Execution
+
+Status: retrospective; TASK-001 is complete. Future documentation bootstrap work can be split as follows without editing the same files concurrently.
+
+| Workstream | State | Owner role | Objective | Scope | Allowed files | Forbidden files | Dependencies | Validation evidence | Handoff notes |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| TASK-001-A Traceability audit | ready now | IPS documentation auditor | Verify Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Coding Prompt -> Code -> Validation links. | Read-only graph and docs audit. | `graph/project_graph.yaml`, `graph/project_graph.example.yaml`, `00_constitution/`, `01_vision/`, `04_systems/`, `10_features/`, `11_tasks/`, `21_execution_plans/`, `22_goal_impact/` | `.env*`, runtime manifests unless an issue is documented. | None. | `python3 scripts/pre_coding_gate.py --root .` | Report missing links as `[MISSING: ...]`; do not invent approvals. |
+| TASK-001-B Validation tooling | ready now | Validation engineer | Run strict documentation and IPS gates and capture reproducible evidence. | Validation commands and report updates only. | `12_validation/`, `reports/validation/` | Runtime code, secrets, consumer repos. | None. | `python3 scripts/strict_doc_audit.py --format markdown --fail-on-issues`; `python3 scripts/deployment_readiness_gate.py --root . --target TASK-001` | Coordinate final evidence names with integration owner. |
+| TASK-001-C Documentation corrections | dependency-gated | Technical writer | Apply scoped documentation fixes found by A or B. | Small doc edits only after findings exist. | Files explicitly identified by A/B findings. | `.env*`, unrelated deployment files. | Findings from A/B. | Re-run failed gate from A/B. | Preserve existing completed status unless reopening is approved. |
+| TASK-001-D Integration | final integration | minio-service-owner | Merge reports, resolve conflicts, and ensure checklist stays truthful. | Final review. | Same files changed by A-C. | Unrelated files. | A-C complete. | All TASK-001 gates pass. | Integration owner controls merge order: A evidence, B reports, C fixes, then final checklist. |
+
+Shared files/contracts: IPS graph schema and execution plan template. Integration owner: `minio-service-owner`. Validation owner: TASK-001-B. Merge order: read-only audit evidence first, validation reports second, documentation corrections third, final checklist last.
+
 ## Test Plan
 Run strict documentation audit and pre-coding gate; run S3 signature tests when runtime access behavior changes.
 
