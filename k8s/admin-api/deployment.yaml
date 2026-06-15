@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio-admin-api
+  namespace: statex-apps
+  labels:
+    app: minio-admin-api
+    managed-by: k8s-migration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio-admin-api
+  template:
+    metadata:
+      labels:
+        app: minio-admin-api
+    spec:
+      containers:
+        - name: api
+          image: python:3.11-alpine
+          imagePullPolicy: IfNotPresent
+          command: ["python", "/app/wrapper_api.py"]
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: RECORDS_DATA_ROOT
+              value: "/data"
+            - name: RECORDS_BUCKET
+              value: "speakasap-records"
+            - name: AUTH_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: minio-microservice-config
+                  key: AUTH_SERVICE_URL
+            - name: ADMIN_API_ALLOWED_ORIGIN
+              value: "https://storage.alfares.cz"
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "25m"
+            limits:
+              memory: "192Mi"
+              cpu: "200m"
+          volumeMounts:
+            - name: app
+              mountPath: /app
+              readOnly: true
+            - name: records
+              mountPath: /data
+              readOnly: true
+      volumes:
+        - name: app
+          configMap:
+            name: minio-admin-api
+            defaultMode: 0555
+        - name: records
+          hostPath:
+            path: /srv/speakasap-records
+            type: DirectoryOrCreate

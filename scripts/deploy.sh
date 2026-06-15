@@ -83,6 +83,14 @@ kubectl apply -f "$PROJECT_ROOT/k8s/external-secret.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/deployment.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/service.yaml"
 kubectl apply -f "$PROJECT_ROOT/k8s/ingress.yaml"
+if [ -d "$PROJECT_ROOT/k8s/admin-api" ]; then
+  kubectl create configmap minio-admin-api \
+    --from-file=wrapper_api.py="$PROJECT_ROOT/backend/wrapper_api.py" \
+    -n "$NAMESPACE" \
+    --dry-run=client -o yaml | kubectl apply -f -
+  kubectl apply -f "$PROJECT_ROOT/k8s/admin-api/deployment.yaml"
+  kubectl apply -f "$PROJECT_ROOT/k8s/admin-api/service.yaml"
+fi
 if [ -d "$PROJECT_ROOT/k8s/web" ]; then
   kubectl apply -f "$PROJECT_ROOT/k8s/web/configmap.yaml"
   kubectl apply -f "$PROJECT_ROOT/k8s/web/deployment.yaml"

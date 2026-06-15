@@ -62,6 +62,24 @@ nodes:
   - id: PROMPT-TASK-002-review-presigned-url-ttl-settings
     type: CodingPrompt
     path: ../14_prompts/PROMPT-TASK-002-review-presigned-url-ttl-settings.md
+  - id: FEAT-005
+    type: Feature
+    path: ../10_features/FEAT-005-protected-admin-wrapper.md
+  - id: TASK-004
+    type: Task
+    path: ../11_tasks/TASK-004-protected-admin-wrapper.md
+  - id: EP-TASK-004
+    type: ExecutionPlan
+    path: ../21_execution_plans/EP-TASK-004-protected-admin-wrapper.md
+  - id: CP-TASK-004
+    type: ContextPackage
+    path: ../13_context_packages/CP-TASK-004-protected-admin-wrapper.md
+  - id: PROMPT-TASK-004-protected-admin-wrapper
+    type: CodingPrompt
+    path: ../14_prompts/PROMPT-TASK-004-protected-admin-wrapper.md
+  - id: VAL-TASK-004-protected-admin-wrapper
+    type: ValidationReport
+    path: ../12_validation/VAL-TASK-004-protected-admin-wrapper.md
 edges:
   - from: SYS-001
     type: impacts_goal
@@ -150,3 +168,30 @@ edges:
   - from: PROMPT-TASK-002-review-presigned-url-ttl-settings
     type: included_in_context
     to: CP-TASK-002
+  - from: FEAT-005
+    type: implements
+    to: SYS-001
+  - from: TASK-004
+    type: impacts_goal
+    to: GOAL-PRIVATE-STORAGE
+  - from: TASK-004
+    type: implements
+    to: FEAT-005
+  - from: EP-TASK-004
+    type: derives_from
+    to: TASK-004
+  - from: EP-TASK-004
+    type: generates
+    to: PROMPT-TASK-004-protected-admin-wrapper
+  - from: EP-TASK-004
+    type: constrained_by
+    to: ADR-001
+  - from: PROMPT-TASK-004-protected-admin-wrapper
+    type: derives_from
+    to: EP-TASK-004
+  - from: PROMPT-TASK-004-protected-admin-wrapper
+    type: included_in_context
+    to: CP-TASK-004
+  - from: VAL-TASK-004-protected-admin-wrapper
+    type: validates
+    to: TASK-004

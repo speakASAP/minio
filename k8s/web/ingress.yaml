@@ -18,6 +18,13 @@ spec:
     - host: storage.alfares.cz
       http:
         paths:
+          - path: /api/admin
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-admin-api
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:

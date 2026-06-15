@@ -185,6 +185,18 @@ The first web implementation includes:
 
 Privileged MinIO object inventory, bucket mutation, credential issuance, and real storage metrics require a protected backend wrapper. The static browser UI intentionally does not expose MinIO root credentials, raw access tokens, private object inventories, or production presigned URLs.
 
+## Protected Admin Wrapper
+
+The first backend wrapper slice is implemented as a read-only administrator API under `storage.alfares.cz/api/admin`. It validates the browser Bearer token through Auth and requires one of `global:superadmin`, `app:minio-microservice:admin`, or `internal:minio-microservice:admin` before returning metadata.
+
+Current endpoints:
+
+* `GET /healthz`: public Kubernetes health probe.
+* `GET /api/admin/summary`: bucket name, object count, total bytes, and newest object timestamp.
+* `GET /api/admin/objects?prefix=&limit=25`: bounded object metadata listing with key, size, content type, and modified timestamp.
+
+The wrapper mounts `/srv/speakasap-records` read-only, does not use or return MinIO root credentials, does not stream object bodies, does not generate presigned URLs, and does not mutate buckets or credentials. Mutation and credential issuance require a separate traced task and validation plan.
+
 ## Configuration
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
