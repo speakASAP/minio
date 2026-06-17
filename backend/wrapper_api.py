@@ -77,7 +77,7 @@ def _validate_token(token: str) -> dict[str, Any] | None:
     )
     try:
         with urllib.request.urlopen(request, timeout=5) as response:
-            if response.status != HTTPStatus.OK:
+            if response.status < 200 or response.status >= 300:
                 return None
             return json.loads(response.read().decode("utf-8"))
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError):
@@ -103,7 +103,7 @@ def _iter_objects(prefix: str = ""):
         return
     if root not in [scan_root, *scan_root.parents]:
         raise ValueError("prefix escapes bucket root")
-    for path in sorted(scan_root.rglob("*")):
+    for path in scan_root.rglob("*"):
         rel_parts = path.relative_to(root).parts
         if not path.is_file() or any(part.startswith(".") for part in rel_parts):
             continue
