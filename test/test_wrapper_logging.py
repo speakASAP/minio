@@ -41,6 +41,30 @@ class CentralLoggingTests(TestCase):
         with patch("urllib.request.urlopen", side_effect=OSError("network down")):
             wrapper._central_log("info", "synthetic smoke", duration_ms=1, correlation_id="corr-1")
 
+    def test_central_log_adds_auth_header_when_token_is_set(self):
+        os.environ["LOGGING_SERVICE_URL"] = "http://logging-microservice:3367"
+        os.environ["LOGGING_SERVICE_TOKEN"] = "unit-token"
+        wrapper = load_wrapper()
+        wrapper.LOGGING_SERVICE_URL = "http://logging-microservice:3367"
+
+        with patch("urllib.request.urlopen") as urlopen:
+            wrapper._central_log("info", "synthetic smoke")
+
+        request = urlopen.call_args.args[0]
+        self.assertEqual(request.get_header("Authorization"), "Bearer unit-token")
+
+    def test_central_log_omits_auth_header_when_token_is_unset(self):
+        os.environ["LOGGING_SERVICE_URL"] = "http://logging-microservice:3367"
+        os.environ.pop("LOGGING_SERVICE_TOKEN", None)
+        wrapper = load_wrapper()
+        wrapper.LOGGING_SERVICE_URL = "http://logging-microservice:3367"
+
+        with patch("urllib.request.urlopen") as urlopen:
+            wrapper._central_log("info", "synthetic smoke")
+
+        request = urlopen.call_args.args[0]
+        self.assertIsNone(request.get_header("Authorization"))
+
 
 if __name__ == "__main__":
     main()

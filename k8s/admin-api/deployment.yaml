@@ -51,6 +51,11 @@ spec:
                 configMapKeyRef:
                   name: minio-microservice-config
                   key: LOGGING_SERVICE_API_PATH
+            - name: LOGGING_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: logging-ingest-credentials
+                  key: LOGGING_SERVICE_TOKEN
             - name: ADMIN_API_ALLOWED_ORIGIN
               value: "https://storage.alfares.cz"
           readinessProbe:

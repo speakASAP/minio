@@ -60,6 +60,14 @@ def _central_log_url() -> str | None:
     return f"{LOGGING_SERVICE_URL}{path}"
 
 
+def _central_log_headers(content_length: int) -> dict[str, str]:
+    headers = {"Content-Type": "application/json", "Content-Length": str(content_length)}
+    token = os.environ.get("LOGGING_SERVICE_TOKEN", "").strip()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
 def _sanitize_metadata(value: Any, depth: int = 0) -> Any:
     if depth > 4:
         return "[MAX_DEPTH]"
@@ -110,7 +118,7 @@ def _central_log(
             url,
             data=body,
             method="POST",
-            headers={"Content-Type": "application/json", "Content-Length": str(len(body))},
+            headers=_central_log_headers(len(body)),
         )
         with urllib.request.urlopen(request, timeout=2):
             return
