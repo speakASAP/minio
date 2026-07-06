@@ -101,14 +101,20 @@ deploy_timing_phase_end "Apply Kubernetes manifests"
 
 deploy_timing_phase_start "Trigger deployment update"
 if [ "$BUILD_IMAGE" = "1" ]; then
-  kubectl set image deployment/${SERVICE_NAME} app="${IMAGE}" -n "${NAMESPACE}"
+  kubectl set image deployment/${SERVICE_NAME} app="$IMAGE" -n "${NAMESPACE}"
 else
   kubectl rollout restart deployment/${SERVICE_NAME} -n "${NAMESPACE}"
+fi
+if [ -d "$PROJECT_ROOT/k8s/admin-api" ]; then
+  kubectl rollout restart deployment/minio-admin-api -n "${NAMESPACE}"
 fi
 deploy_timing_phase_end "Trigger deployment update"
 
 deploy_timing_phase_start "Wait for rollout"
 deploy_timing_k8s_rollout_wait kubectl "$SERVICE_NAME" "$NAMESPACE"
+if [ -d "$PROJECT_ROOT/k8s/admin-api" ]; then
+  deploy_timing_k8s_rollout_wait kubectl "minio-admin-api" "$NAMESPACE"
+fi
 deploy_timing_phase_end "Wait for rollout"
 
 deploy_timing_phase_start "Health check"
