@@ -24,4 +24,5 @@ data:
   DB_AUTO_CREATE: "true"
   AUTH_SERVICE_URL: "http://auth-microservice.statex-apps.svc.cluster.local:3370"
   LOGGING_SERVICE_URL: "http://logging-microservice.statex-apps.svc.cluster.local:3367"
+  LOGGING_SERVICE_API_PATH: "/api/logs"
   # TIMEOUT_MS: "30000"

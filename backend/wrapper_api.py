@@ -32,10 +32,90 @@ AUTH_SERVICE_URL = os.environ.get("AUTH_SERVICE_URL", "http://auth-microservice.
 ALLOWED_ORIGIN = os.environ.get("ADMIN_API_ALLOWED_ORIGIN", "https://storage.alfares.cz")
 MAX_LIST_LIMIT = int(os.environ.get("ADMIN_API_MAX_LIST_LIMIT", "200"))
 MAX_SUMMARY_OBJECTS = int(os.environ.get("ADMIN_API_MAX_SUMMARY_OBJECTS", "100000"))
+SERVICE_NAME = os.environ.get("SERVICE_NAME", "minio-microservice").strip() or "minio-microservice"
+LOGGING_SERVICE_URL = os.environ.get("LOGGING_SERVICE_URL", "").strip().rstrip("/")
+LOGGING_SERVICE_API_PATH = os.environ.get("LOGGING_SERVICE_API_PATH", "/api/logs").strip() or "/api/logs"
+SENSITIVE_KEY_PARTS = (
+    "password",
+    "passwd",
+    "pwd",
+    "secret",
+    "token",
+    "authorization",
+    "cookie",
+    "api_key",
+    "apikey",
+    "private_key",
+)
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+
+def _central_log_url() -> str | None:
+    if not LOGGING_SERVICE_URL:
+        return None
+    path = LOGGING_SERVICE_API_PATH if LOGGING_SERVICE_API_PATH.startswith("/") else f"/{LOGGING_SERVICE_API_PATH}"
+    return f"{LOGGING_SERVICE_URL}{path}"
+
+
+def _sanitize_metadata(value: Any, depth: int = 0) -> Any:
+    if depth > 4:
+        return "[MAX_DEPTH]"
+    if isinstance(value, dict):
+        sanitized: dict[str, Any] = {}
+        for key, item in value.items():
+            key_text = str(key)
+            key_lower = key_text.lower().replace("-", "_")
+            if any(part in key_lower for part in SENSITIVE_KEY_PARTS):
+                sanitized[key_text] = "[REDACTED]"
+            else:
+                sanitized[key_text] = _sanitize_metadata(item, depth + 1)
+        return sanitized
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_metadata(item, depth + 1) for item in list(value)[:25]]
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return str(value)
+
+
+def _central_log(
+    level: str,
+    message: str,
+    *,
+    duration_ms: int | None = None,
+    correlation_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> None:
+    url = _central_log_url()
+    if not url:
+        return
+    payload: dict[str, Any] = {
+        "service": SERVICE_NAME,
+        "level": level if level in {"error", "warn", "info", "debug"} else "info",
+        "msg": message,
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    }
+    if duration_ms is not None:
+        payload["duration_ms"] = duration_ms
+    if correlation_id:
+        payload["correlation_id"] = correlation_id
+    if metadata:
+        payload["metadata"] = _sanitize_metadata(metadata)
+
+    try:
+        body = _json_bytes(payload)
+        request = urllib.request.Request(
+            url,
+            data=body,
+            method="POST",
+            headers={"Content-Type": "application/json", "Content-Length": str(len(body))},
+        )
+        with urllib.request.urlopen(request, timeout=2):
+            return
+    except Exception:
+        return
 
 
 def _bucket_root() -> Path:
@@ -173,7 +253,9 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self) -> None:
+        started = time.monotonic()
         parsed = urlparse(self.path)
+        correlation_id = self.headers.get("X-Correlation-ID") or self.headers.get("X-Request-ID")
         if parsed.path == "/healthz":
             self._send_json(HTTPStatus.OK, {"status": "ok", "bucketConfigured": bool(BUCKET)})
             return
@@ -181,10 +263,27 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json(HTTPStatus.NOT_FOUND, {"error": "not_found"})
             return
         if not self._authorize():
+            duration_ms = int((time.monotonic() - started) * 1000)
+            _central_log(
+                "warn",
+                "minio admin wrapper request rejected",
+                duration_ms=duration_ms,
+                correlation_id=correlation_id,
+                metadata={"path": parsed.path},
+            )
             return
         try:
             if parsed.path == "/api/admin/summary":
-                self._send_json(HTTPStatus.OK, _summary())
+                payload = _summary()
+                self._send_json(HTTPStatus.OK, payload)
+                duration_ms = int((time.monotonic() - started) * 1000)
+                _central_log(
+                    "info",
+                    "minio admin wrapper summary served",
+                    duration_ms=duration_ms,
+                    correlation_id=correlation_id,
+                    metadata={"object_count": payload["objectCount"], "truncated": payload["truncated"]},
+                )
                 return
             if parsed.path == "/api/admin/objects":
                 query = parse_qs(parsed.query)
@@ -196,15 +295,40 @@ class Handler(BaseHTTPRequestHandler):
                     if len(objects) >= limit:
                         break
                 self._send_json(HTTPStatus.OK, {"bucket": BUCKET, "prefix": prefix, "limit": limit, "objects": objects})
+                duration_ms = int((time.monotonic() - started) * 1000)
+                _central_log(
+                    "info",
+                    "minio admin wrapper objects served",
+                    duration_ms=duration_ms,
+                    correlation_id=correlation_id,
+                    metadata={"prefix": prefix, "limit": limit, "returned": len(objects)},
+                )
                 return
         except (OSError, ValueError) as error:
             self._send_json(HTTPStatus.BAD_REQUEST, {"error": "metadata_unavailable", "detail": str(error)})
+            duration_ms = int((time.monotonic() - started) * 1000)
+            _central_log(
+                "error",
+                "minio admin wrapper metadata unavailable",
+                duration_ms=duration_ms,
+                correlation_id=correlation_id,
+                metadata={"path": parsed.path, "error": str(error)},
+            )
             return
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "not_found"})
+        duration_ms = int((time.monotonic() - started) * 1000)
+        _central_log(
+            "warn",
+            "minio admin wrapper route not found",
+            duration_ms=duration_ms,
+            correlation_id=correlation_id,
+            metadata={"path": parsed.path},
+        )
 
 
 def main() -> None:
     port = int(os.environ.get("PORT", "8080"))
+    _central_log("info", "minio admin wrapper starting", metadata={"port": port, "bucket": BUCKET})
     ThreadingHTTPServer(("0.0.0.0", port), Handler).serve_forever()
 
 
