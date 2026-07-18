@@ -16,7 +16,7 @@ related_adrs:
 ```
 
 ## Protected documents
-00_constitution/CONSTITUTION.md and 01_vision/VISION.md.
+docs/00_constitution/CONSTITUTION.md and docs/01_vision/VISION.md.
 
 ## Change categories
 ### Minor documentation change

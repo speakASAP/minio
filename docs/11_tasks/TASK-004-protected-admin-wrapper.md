@@ -46,7 +46,7 @@ Allows administrators to inspect real storage metadata while preserving private 
 - [x] Deployment manifests mount records read-only.
 
 ## Required Context
-`README.md`, `17_governance/PROJECT_INVARIANTS.md`, `10_features/FEAT-004-customer-web-surface.md`, and the Auth validation role contract used by the existing web UI.
+`README.md`, `docs/17_governance/PROJECT_INVARIANTS.md`, `docs/10_features/FEAT-004-customer-web-surface.md`, and the Auth validation role contract used by the existing web UI.
 
 ## Validation Task
 Validation evidence is recorded in `../12_validation/VAL-TASK-004-protected-admin-wrapper.md`.

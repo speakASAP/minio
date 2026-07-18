@@ -20,7 +20,7 @@ related_adrs:
 Define how AI agents may work in minio-microservice after IPS adoption.
 
 ## Immutable documents
-After bootstrap, AI agents must not modify 00_constitution/CONSTITUTION.md or 01_vision/VISION.md without owner instruction.
+After bootstrap, AI agents must not modify docs/00_constitution/CONSTITUTION.md or docs/01_vision/VISION.md without owner instruction.
 
 ## Required work chain
 Vision -> Goal Impact -> System -> Feature -> Task -> Execution Plan -> Prompt -> Code -> Validation.

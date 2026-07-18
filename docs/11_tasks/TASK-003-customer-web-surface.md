@@ -60,8 +60,8 @@ Static rendering is deterministic. Lead submission and Auth validation depend on
 
 ## Required Context
 - `README.md`
-- `17_governance/PROJECT_INVARIANTS.md`
-- `23_documentation_contracts/SENSITIVE_DATA_POLICY.md`
+- `docs/17_governance/PROJECT_INVARIANTS.md`
+- `docs/23_documentation_contracts/SENSITIVE_DATA_POLICY.md`
 - Auth and Leads contracts discovered from their remote repositories.
 
 ## Validation Task

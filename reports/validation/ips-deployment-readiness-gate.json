@@ -24,132 +24,132 @@
     {
       "line": 56,
       "marker": "[MISSING: effective TTL source]",
-      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 58,
       "marker": "[MISSING: safe credentials/approval]",
-      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 65,
       "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 66,
       "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 67,
       "marker": "[MISSING: safe credentials/approval]",
-      "path": "11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 72,
       "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 73,
       "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 74,
       "marker": "[MISSING: safe credentials/approval]",
-      "path": "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 69,
       "marker": "[MISSING: ...]",
-      "path": "21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md"
+      "path": "docs/21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md"
     },
     {
       "line": 69,
       "marker": "[MISSING: ...]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 70,
       "marker": "[MISSING: ...]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 71,
       "marker": "[MISSING: safe credentials/approval]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 80,
       "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 81,
       "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 82,
       "marker": "[MISSING: safe credentials/approval]",
-      "path": "21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
     },
     {
       "line": 16,
       "marker": "[MISSING: ...]",
-      "path": "23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
+      "path": "docs/23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
     },
     {
       "line": 17,
       "marker": "[UNKNOWN: ...]",
-      "path": "23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
+      "path": "docs/23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
     },
     {
       "line": 41,
       "marker": "[MISSING: ...]",
-      "path": "23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
+      "path": "docs/23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
     },
     {
       "line": 71,
       "marker": "[MISSING: define what this feature explicitly does not include]",
-      "path": "23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
+      "path": "docs/23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
     },
     {
       "line": 74,
       "marker": "[MISSING: define measurable acceptance criteria]",
-      "path": "23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
+      "path": "docs/23_documentation_contracts/AGENT_GAP_FILLING_RULES.md"
     },
     {
       "line": 47,
       "marker": "[MISSING: describe what is missing and who should provide it]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 53,
       "marker": "[MISSING: define measurable acceptance criteria for this feature]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 54,
       "marker": "[MISSING: identify upstream business goal]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 55,
       "marker": "[MISSING: list files that must not be modified]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 63,
       "marker": "[UNKNOWN: describe what is unknown and how to discover it]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 75,
       "marker": "[MISSING: ...]",
-      "path": "23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
+      "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
       "line": 60,
@@ -164,13 +164,13 @@
   ],
   "validation_reports": {
     "matching_reports": [
-      "12_validation/VAL-TASK-004-protected-admin-wrapper.md"
+      "docs/12_validation/VAL-TASK-004-protected-admin-wrapper.md"
     ],
     "reports": [
-      "12_validation/VAL-TASK-001-ips-documentation-bootstrap.md",
-      "12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md",
-      "12_validation/VAL-TASK-003-customer-web-surface.md",
-      "12_validation/VAL-TASK-004-protected-admin-wrapper.md"
+      "docs/12_validation/VAL-TASK-001-ips-documentation-bootstrap.md",
+      "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md",
+      "docs/12_validation/VAL-TASK-003-customer-web-surface.md",
+      "docs/12_validation/VAL-TASK-004-protected-admin-wrapper.md"
     ],
     "status": "pass",
     "target": "TASK-004"

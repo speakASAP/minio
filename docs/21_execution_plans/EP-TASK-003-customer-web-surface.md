@@ -53,7 +53,7 @@ Create a static web app and Kubernetes manifests for a separate `storage.alfares
 - `README.md`
 - `nginx/nginx-api-routes.conf`
 - `k8s/ingress.yaml`
-- `17_governance/PROJECT_INVARIANTS.md`
+- `docs/17_governance/PROJECT_INVARIANTS.md`
 
 ## Files to Create
 - `web/index.html`
@@ -63,9 +63,9 @@ Create a static web app and Kubernetes manifests for a separate `storage.alfares
 - `k8s/web/service.yaml`
 - `k8s/web/ingress.yaml`
 - `k8s/web/configmap.yaml`
-- `10_features/FEAT-004-customer-web-surface.md`
-- `11_tasks/TASK-003-customer-web-surface.md`
-- `12_validation/VAL-TASK-003-customer-web-surface.md`
+- `docs/10_features/FEAT-004-customer-web-surface.md`
+- `docs/11_tasks/TASK-003-customer-web-surface.md`
+- `docs/12_validation/VAL-TASK-003-customer-web-surface.md`
 
 ## Files to Modify
 - `README.md`
@@ -73,8 +73,8 @@ Create a static web app and Kubernetes manifests for a separate `storage.alfares
 - `graph/project_graph.yaml`
 
 ## Files That Must Not Be Modified
-- `00_constitution/CONSTITUTION.md`
-- `01_vision/VISION.md`
+- `docs/00_constitution/CONSTITUTION.md`
+- `docs/01_vision/VISION.md`
 - MinIO S3 root ingress semantics for `minio.alfares.cz`.
 
 ## Implementation Steps
@@ -93,8 +93,8 @@ Status: retrospective; TASK-003 is complete. Future customer web surface changes
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | TASK-003-A Static UI | ready now | Frontend engineer | Improve browser-safe landing, client, and admin shell without changing API contracts. | `web/` HTML/CSS/JS only. | `web/index.html`, `web/styles.css`, `web/app.js` | `k8s/`, `scripts/deploy.sh`, `.env*`, MinIO S3 ingress root behavior. | None for UI-only changes. | `node --check web/app.js`; desktop/mobile render evidence. | Keep examples synthetic and no object inventory. |
 | TASK-003-B Platform manifests | ready now | Platform engineer | Maintain separate static web deployment/host for `storage.alfares.cz`. | Kubernetes web manifests only. | `k8s/web/deployment.yaml`, `k8s/web/service.yaml`, `k8s/web/ingress.yaml`, `k8s/web/configmap.yaml` | S3 host root ingress semantics for `minio.alfares.cz`, `.env*`, browser UI copy. | None unless UI asset paths change. | Manifest dry-run or deployment-readiness gate evidence. | Preserve separate host; no S3 root replacement. |
-| TASK-003-C Auth and Leads contract review | ready now | Integration reviewer | Verify static UI uses Leads/Auth handoffs safely. | Contract review and small JS endpoint corrections only. | `web/app.js`, `13_context_packages/`, `14_prompts/`, `12_validation/` | Credentials, raw tokens in logs, backend wrapper changes. | None. | Syntax check plus contract evidence; no secrets. | Admin data must remain hidden unless Auth validates accepted admin role. |
-| TASK-003-D Documentation and validation | ready now | Validation/documentation engineer | Keep README, graph, validation reports, and screenshots aligned with implementation. | Documentation and evidence files. | `README.md`, `graph/project_graph.yaml`, `12_validation/`, `reports/validation/` | Runtime behavior files unless fixing documented mismatch. | A-C outputs for final evidence. | `python3 scripts/pre_coding_gate.py --root .`; `python3 scripts/deployment_readiness_gate.py --root .` | Do not mark evidence complete until browser render and sensitive-data checks are present. |
+| TASK-003-C Auth and Leads contract review | ready now | Integration reviewer | Verify static UI uses Leads/Auth handoffs safely. | Contract review and small JS endpoint corrections only. | `web/app.js`, `docs/13_context_packages/`, `docs/14_prompts/`, `docs/12_validation/` | Credentials, raw tokens in logs, backend wrapper changes. | None. | Syntax check plus contract evidence; no secrets. | Admin data must remain hidden unless Auth validates accepted admin role. |
+| TASK-003-D Documentation and validation | ready now | Validation/documentation engineer | Keep README, graph, validation reports, and screenshots aligned with implementation. | Documentation and evidence files. | `README.md`, `graph/project_graph.yaml`, `docs/12_validation/`, `reports/validation/` | Runtime behavior files unless fixing documented mismatch. | A-C outputs for final evidence. | `python3 scripts/pre_coding_gate.py --root .`; `python3 scripts/deployment_readiness_gate.py --root .` | Do not mark evidence complete until browser render and sensitive-data checks are present. |
 | TASK-003-E Integration | final integration | minio-service-owner | Resolve conflicts, verify public contracts, and perform final release decision. | Final merge and deployment-readiness review. | Files changed by A-D. | Unrelated service files and secrets. | A-D complete. | All gates and render checks pass. | Merge order: UI, manifests, contract corrections, docs/evidence, final checklist. |
 
 Shared files/contracts: `web/app.js` Auth/Leads endpoints, `storage.alfares.cz` web host, `minio.alfares.cz` S3 root behavior. Integration owner: `minio-service-owner`. Validation owner: TASK-003-D. Merge order: A -> B -> C -> D -> E, with C reviewing any A changes to Auth/Leads calls before final integration.

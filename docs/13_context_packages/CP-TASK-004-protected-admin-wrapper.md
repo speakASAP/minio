@@ -20,7 +20,7 @@ TASK-004: `../11_tasks/TASK-004-protected-admin-wrapper.md`
 - Execution plan: `../21_execution_plans/EP-TASK-004-protected-admin-wrapper.md`
 
 ## Included documents
-`README.md`, `17_governance/PROJECT_INVARIANTS.md`, `10_features/FEAT-004-customer-web-surface.md`, `web/app.js`, `web/admin.html`, and Kubernetes web manifests.
+`README.md`, `docs/17_governance/PROJECT_INVARIANTS.md`, `docs/10_features/FEAT-004-customer-web-surface.md`, `web/app.js`, `web/admin.html`, and Kubernetes web manifests.
 
 ## Excluded documents
 `.env*`, secret-bearing files, production object bodies, raw access tokens, authorization headers, and private presigned URLs.

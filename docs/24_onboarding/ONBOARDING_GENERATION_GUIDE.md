@@ -19,7 +19,7 @@ related_adrs:
 Generate concise onboarding from approved MinIO docs without loading the entire repository.
 
 ## Output files
-Place generated onboarding under 24_onboarding/generated/ when needed.
+Place generated onboarding under docs/24_onboarding/generated/ when needed.
 
 ## Human onboarding package
 Include purpose, consumers, private-storage rules, deployment model, diagnostics, and documentation review.
