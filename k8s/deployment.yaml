@@ -44,11 +44,6 @@ spec:
                 configMapKeyRef:
                   name: minio-microservice-config
                   key: RECORDS_CORS_ORIGINS
-            - name: JWT_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: minio-microservice-secret
-                  key: JWT_TOKEN
           startupProbe:
             httpGet:
               path: /minio/health/live
