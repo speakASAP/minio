@@ -1,8 +1,15 @@
 # MinIO Microservice (Records Storage)
 
-S3-compatible object storage microservice for lesson records. Runs on **alfares server** (85.163.140.109). Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings without NFS. MinIO stores lesson MP3s in a bucket rooted at the canonical data directory `/srv/speakasap-records` on alfares (no NFS dependency): bucket `speakasap-records` maps to `/srv/speakasap-records/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`.
+S3-compatible object storage microservice for lesson records. Runs as the Kubernetes deployment `minio-microservice` in namespace `statex-apps` on **alfares**. Used by speakasap-portal (prod) for storing and serving lesson MP3 recordings. Data root is the canonical directory `/srv/speakasap-records` on alfares, mounted into the pod as a `hostPath` at `/data`; bucket `speakasap-records` maps to `/srv/speakasap-records/speakasap-records/YYYY/MM/DD/lesson_<uuid>.mp3`.
 
-**Note:** The portal (speakasap) and MinIO are on **different servers**; they do not share an internal network. The portal must use the **public MinIO URL** (e.g. `https://minio.alfares.cz`), and all S3 traffic goes through the proxy. The proxy must forward `Host` and `Authorization` unchanged for S3 SigV4 (see `nginx/minio.conf` and deploy).
+**Note:** speakasap-portal reaches MinIO over the **public URL** `https://minio.alfares.cz`; S3 traffic goes through the ingress, which must forward `Host` and `Authorization` unchanged for S3 SigV4.
+
+> **Data safety — read before touching mounts**
+>
+> `/srv/speakasap-records` holds the live recordings (~618G). Never `mount --bind`
+> another directory over it: the data is not deleted, but it becomes invisible to
+> MinIO and every consumer until unmounted. MinIO's data root points at this
+> directory **directly** — no bind mount is involved, and none should be added.
 
 ## Purpose
 
@@ -10,80 +17,47 @@ S3-compatible object storage microservice for lesson records. Runs on **alfares 
 * Bucket: `RECORDS_BUCKET` (currently `speakasap-records`). Object key: `YYYY/MM/DD/lesson_UUID.mp3`.
 * Prod uploads via S3 PUT; playback via presigned GET URLs (no file streaming on prod).
 
-## Deployment (Alfares Server)
+## Deployment (Kubernetes)
 
-MinIO runs on alfares only as the backing store for lesson records. nginx-microservice fronts it via HTTPS (`https://minio.alfares.cz`) using the standard blue/green deployment flow and the MinIO Docker container as defined in `docker-compose.blue.yml` / `docker-compose.green.yml`. The proxy and upstream container mapping are managed entirely by nginx-microservice deployment scripts; no direct host-specific upstreams (such as `host.docker.internal`) are required.
-
-### Prerequisites
-
-* Alfares server: 85.163.140.109, Nginx installed.
-* MinIO binary at `/usr/local/bin/minio` (setup-dev.sh warns if missing; install manually).
-* MinIO Client (`minio-mc`) for init-bucket.sh: <https://min.io/docs/minio/linux/reference/minio-mc.html>  
-  If the system has Midnight Commander (package `mc`), install the MinIO client as `minio-mc` to avoid conflict:  
-  `wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/minio-mc && chmod +x /usr/local/bin/minio-mc`
-
-### Initial deployment (first time)
-
-Run on **alfares server** in this order:
-
-1. **Setup** (user, dirs, systemd, .env):
-
-   ```bash
-   cd /path/to/minio
-   sudo scripts/setup-dev.sh
-   ```
-
-2. **Install MinIO binary** if not present (setup-dev.sh will warn):
-
-   ```bash
-   sudo wget https://dl.min.io/server/minio/release/linux-amd64/minio -O /usr/local/bin/minio
-   sudo chmod +x /usr/local/bin/minio
-   sudo chown minio:minio /usr/local/bin/minio
-   ```
-
-3. **Set credentials** in `/srv/minio/.env` (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD).
-
-4. **Enable and start MinIO**:
-
-   ```bash
-   sudo systemctl enable minio
-   sudo systemctl start minio
-   sudo systemctl status minio
-   ```
-
-5. **Create bucket** (requires MinIO Client as `minio-mc` (preferred) or `mc` when it is the MinIO client, and .env with credentials):
-
-   ```bash
-   cd /path/to/minio
-   ./scripts/init-bucket.sh
-   ```
-
-6. **Optional – Nginx (dev)**: when MinIO is behind nginx-microservice, `nginx/nginx-api-routes.conf` lists `/`, `/minio/`, and `/records/`. Root `/` is required so the portal can use `https://minio.alfares.cz` (no path) and SigV4 path matches. After changing it, redeploy via `./scripts/deploy.sh`.
-
-7. **Optional – deploy.sh**: only if MinIO is later added to nginx-microservice on statex (per this README, MinIO runs on alfares only; deploy.sh is for blue/green on statex).
-
-### 1. Run MinIO (systemd)
+MinIO runs as a k8s deployment in namespace `statex-apps`. There is **no** systemd
+unit and **no** Docker blue/green flow for this service; both are historical and
+were removed. Manifests live in `k8s/`.
 
 ```bash
-# On alfares (ssh alfares)
-sudo scripts/setup-dev.sh   # Creates user, dir, systemd unit, installs MinIO if needed
-sudo systemctl enable minio
-sudo systemctl start minio
-sudo systemctl status minio
+./scripts/deploy.sh                 # build + apply k8s manifests
+kubectl get pods -n statex-apps -l app=minio-microservice
+kubectl logs  -n statex-apps -l app=minio-microservice -f
+kubectl rollout restart deployment/minio-microservice -n statex-apps
 ```
 
-MinIO API: `127.0.0.1:9000`, Console: `127.0.0.1:9001`. Not exposed publicly; Nginx proxies.
+Committing to `main` deploys automatically via the shared deploy queue; a manual
+`deploy.sh` run is only needed for a rollback or an explicit redeploy.
 
-> **Data root (alfares Docker deploy)**  
-> When deployed via Docker on alfares, MinIO’s data root is the **canonical records directory**:
->
-> ```yaml
-> # docker-compose.{blue,green}.yml
-> services:
->   minio:
->     volumes:
->       - /srv/speakasap-records:/data
-> ```
+* **API port:** 9000 (ClusterIP `minio-microservice`), public via `https://minio.alfares.cz`
+* **Data:** `hostPath` `/srv/speakasap-records` → `/data` in the pod
+* **Secrets:** Vault `secret/prod/minio-microservice`, synced by ESO to Secret `minio-microservice-secret`
+
+### Bucket creation
+
+```bash
+./scripts/init-bucket.sh            # needs MinIO Client as `minio-mc` and .env credentials
+```
+
+Install the client as `minio-mc` to avoid a conflict with Midnight Commander (`mc`):
+
+```bash
+wget https://dl.min.io/client/mc/release/linux-amd64/mc -O /usr/local/bin/minio-mc && chmod +x /usr/local/bin/minio-mc
+```
+
+### Local development
+
+`scripts/setup-dev.sh` provisions a **host-level** MinIO (own user, systemd unit,
+data dir) for a dev machine only. It refuses to run where the k8s deployment
+exists or where `/srv/speakasap-records` already contains data.
+
+> **Data root**
+> MinIO's data root is the **canonical records directory** `/srv/speakasap-records`,
+> mounted into the pod as a `hostPath` volume at `/data` (see `k8s/deployment.yaml`).
 >
 > MinIO metadata lives under:
 >
@@ -292,19 +266,10 @@ The teacher/manager play button redirects the browser to a presigned URL on `htt
      ```bash
      sudo chown -R minio:minio /srv/speakasap-records
      sudo chmod -R u+rwX /srv/speakasap-records
-     docker restart minio-microservice-blue   # or green, whichever is active
+     kubectl rollout restart deployment/minio-microservice -n statex-apps
      ```
 
-   * **Systemd MinIO** (if this host uses systemd MinIO instead of Docker): also make the **bucket target** writable:
-
-     ```bash
-     sudo chown -R minio:minio /srv/speakasap-records
-     sudo chmod -R u+rwX /srv/speakasap-records
-     sudo systemctl restart minio
-     sudo systemctl status minio
-     ```
-
-   **After any permission fix, restart MinIO** (systemd or Docker) so it clears cached error state.
+   **After any permission fix, restart the pod** so MinIO clears cached error state.
 
    Then on the portal host:
 
@@ -347,24 +312,22 @@ The teacher/manager play button redirects the browser to a presigned URL on `htt
 
    * When correctly configured, this should return HTTP 200 from the helper and a successful `head_object` on the same bucket/key in MinIO.
 
-### Systemd MinIO fails to start (exit-code / FAILURE) on alfares
-
-If `systemctl status minio` shows `Active: activating (auto-restart) (Result: exit-code)`:
-
-* **Port conflict:** Docker MinIO (minio-microservice-blue/green) may already be bound to 9000. Only one process can listen on 127.0.0.1:9000. Check with `ss -tlnp | grep 9000`.
-* **Ownership:** If `/srv/minio-data` was changed to `1000:1000` for Docker, systemd MinIO (user `minio`, UID 995) cannot write there.
-
-**Recommended when using deploy (Docker blue/green):** run only Docker MinIO on alfares and disable systemd. Use **minio:minio** for both dirs (Docker runs as root and can write to them):
+### MinIO pod not starting
 
 ```bash
-# On alfares
-sudo systemctl stop minio
-sudo systemctl disable minio
-sudo chown -R minio:minio /srv/minio-data /srv/speakasap-records
-sudo chmod -R u+rwX /srv/minio-data /srv/speakasap-records
-cd ~/Documents/Github/minio-microservice
-docker stop minio-microservice-blue; docker rm minio-microservice-blue
-docker compose -f docker-compose.blue.yml up -d
+kubectl get pods    -n statex-apps -l app=minio-microservice
+kubectl describe pod -n statex-apps -l app=minio-microservice
+kubectl logs        -n statex-apps -l app=minio-microservice --tail=50
 ```
 
-Then from speakasap: `supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper` and `python3 scripts/verify_s3_records_upload.py`.
+* **Ownership:** the container runs as **root** (no `securityContext` is set), so it
+  can write regardless of owner. The data files are owned by `995:982` — the legacy
+  host `minio` user — which is inert while the pod runs as root, but matters if a
+  non-root `securityContext` is ever added: set `runAsUser: 995` to match, or chown
+  the data first.
+* **Port 9000:** owned by the pod. Nothing on the host should bind it — a host-level
+  MinIO would conflict, which is why `setup-dev.sh` refuses to install one here.
+* **Secrets:** if the pod starts then crashes on credentials, check the ExternalSecret
+  synced (`kubectl get externalsecret -n statex-apps`); a sealed Vault breaks the sync.
+
+Then, on the portal side: `supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper` and `python3 scripts/verify_s3_records_upload.py`.
