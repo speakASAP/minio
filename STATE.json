@@ -36,6 +36,5 @@
     "status": "kubernetes"
   },
   "blockers": [],
-  "followUps": [],
-  "status": "done"
+  "followUps": []
 }
