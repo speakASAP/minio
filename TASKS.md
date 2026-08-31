@@ -11,9 +11,15 @@
 ## Project Completion Marker
 
 - 2026-06-21: Project marked completed/frozen after remote inventory. There are no active goals, active plans, open tasks, blockers, or pending human/AI actions. Do not ask for a new goal during routine status checks unless the owner explicitly creates one.\n\n---\n\n# Tasks: minio-microservice
-## ActiveNo active implementation task; the canonical adoption bootstrap is complete.
-## Ready NextReview presigned URL TTL settings through the existing scoped task and validation chain before any behavior change.
-## BlockedNo known blockers.
+## Active
+
+No active implementation task; the canonical adoption bootstrap is complete.
+## Ready Next
+
+Review presigned URL TTL settings through the existing scoped task and validation chain before any behavior change.
+## Blocked
+
+No known blockers.
 ## Completed
 TASK-001-bootstrap-service adopted the IPS documentation standard for this already-running production object-storage service.
 ## Handoff
