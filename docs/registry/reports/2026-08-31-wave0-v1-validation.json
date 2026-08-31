@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "id": "VAL-WAVE0-MINIO-2026-08-31",
+  "repository": "minio-microservice",
+  "scope": "Wave 0 v1 docs-only planning registry adoption",
+  "created_at": "2026-08-31T04:29:56Z",
+  "status": "validated",
+  "sources_reviewed": [
+    "shared/docs/standardization/wave-0/README.md",
+    "shared/docs/standardization/wave-0/schemas/v1/state.schema.json",
+    "shared/docs/standardization/wave-0/schemas/v1/repository-profile.schema.json",
+    "shared/docs/standardization/wave-0/schemas/v1/artifact-index.schema.json",
+    "BUSINESS.md",
+    "SYSTEM.md",
+    "AGENTS.md",
+    "AGENT_OPERATIONS.md",
+    "TASKS.md",
+    "STATE.json",
+    "docs/orchestrator/VALIDATION_DEBT.md"
+  ],
+  "checks": [
+    {
+      "name": "validate-repository-profile",
+      "command": "python3 /home/ssf/Documents/Github/shared/scripts/validate-repository-profile.py --root . --json",
+      "result": "pass"
+    },
+    {
+      "name": "build-artifact-index-check",
+      "command": "python3 /home/ssf/Documents/Github/shared/scripts/build-artifact-index.py --root . --check --json",
+      "result": "pass"
+    },
+    {
+      "name": "json-parse",
+      "command": "python3 -m json.tool STATE.json && python3 -m json.tool docs/registry/REPOSITORY_PROFILE.json && python3 -m json.tool docs/registry/ARTIFACT_INDEX.json && python3 -m json.tool docs/registry/reports/2026-08-31-wave0-v1-validation.json",
+      "result": "pass"
+    },
+    {
+      "name": "safe-placeholder-scan",
+      "command": "rg scan for unresolved placeholder markers across registry JSON files",
+      "result": "pass"
+    },
+    {
+      "name": "git-diff-check",
+      "command": "git diff --check",
+      "result": "pass"
+    }
+  ],
+  "notes": [
+    "Docs-only Wave 0 v1 adoption; no source, deploy, runtime, or secret paths were modified.",
+    "RunLayer project mapping remains intentionally unmapped because no canonical mapping is documented in repository sources."
+  ]
+}

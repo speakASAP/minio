@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "repository": "minio-microservice",
+  "generated_at": "2026-08-31T04:29:56Z",
+  "artifacts": [
+    {
+      "id": "VAL-WAVE0-MINIO-2026-08-31",
+      "type": "validation",
+      "status": "validated",
+      "title": "Wave 0 v1 planning registry validation report",
+      "path": "docs/registry/reports/2026-08-31-wave0-v1-validation.json",
+      "parent_ids": [],
+      "updated_at": "2026-08-31T04:29:56Z"
+    }
+  ],
+  "warnings": [
+    "No canonical RunLayer project mapping is documented in repository sources."
+  ]
+}
