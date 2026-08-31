@@ -2,10 +2,10 @@
 
 ```yaml
 id: VISION
-status: draft
-owner: minio-service-owner
+status: approved
+owner: project owner
 created: 2026-06-13
-last_updated: 2026-06-13
+last_updated: 2026-08-30
 completeness_level: complete
 upstream:
   - ../BUSINESS.md
@@ -59,3 +59,9 @@ AI assistance is allowed for bounded maintenance only when upstream intent, sens
 ## Operational Constraints
 
 The service must preserve the current operational model documented in the root README and system docs. MinIO remains the storage boundary for recordings and artifacts, while consumer services own business workflows. Production access uses the public MinIO endpoint when consumers are on different servers, and proxy routing must not alter signed S3 host, path, method, or authorization semantics. The records bucket must stay private, CORS must be limited to approved browser origins, and diagnostic evidence must summarize failures without copying credentials, authorization headers, raw object data, or full production presigned URLs. Deployment-affecting changes must update documentation and validation evidence together.
+
+## Approval
+
+Status: approved
+Approved by: project owner
+Approval evidence: owner-confirmation: minio-microservice-onboarding-approved

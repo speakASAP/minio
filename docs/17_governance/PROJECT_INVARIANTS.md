@@ -2,11 +2,11 @@
 
 ```yaml
 id: PROJECT-INVARIANTS
-status: draft
-owner: minio-service-owner
+status: validated
+owner: project owner
 created: 2026-06-13
-last_updated: 2026-06-13
-completeness_level: complete
+last_updated: 2026-08-30
+completeness_level: validated
 upstream:
   - ../00_constitution/CONSTITUTION.md
   - ../01_vision/VISION.md

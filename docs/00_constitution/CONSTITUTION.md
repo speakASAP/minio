@@ -2,10 +2,10 @@
 
 ```yaml
 id: CONSTITUTION
-status: draft
-owner: minio-service-owner
+status: approved
+owner: project owner
 created: 2026-06-13
-last_updated: 2026-06-13
+last_updated: 2026-08-30
 completeness_level: complete
 upstream: []
 downstream:
@@ -35,3 +35,9 @@ AI agents may read and reference this document but must not modify it after boot
 
 ## Change Note
 - 2026-06-13: Initial constitution created during IPS bootstrap.
+
+## Approval
+
+Status: approved
+Approved by: project owner
+Approval evidence: owner-confirmation: minio-microservice-onboarding-approved

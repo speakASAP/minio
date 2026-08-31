@@ -63,4 +63,16 @@ Validation debt does not excuse current-task failures. If a failure touches curr
 
 Report files changed, documents created, validation evidence, validation debt used or added, blockers, deviations, and the next concrete action.
 
-Next step: Follow the repository-specific `AGENTS.md` and planning files for the current task.
+Next step: Follow the repository-specific `AGENTS.md` and planning files for the current task.\n\n---\n\n# Agent Operations
+## Roles
+A worker owns one bounded task; an integration owner resolves shared contracts; a validation owner records evidence.
+## Before Work
+Read intent and state documents, verify the target, classify sensitive data, and establish traceability.
+## Parallel Work
+Do not concurrently edit the same public contract, secret configuration, manifest, or state artifact.
+## Validation Debt
+Only pre-existing out-of-scope failures belong in `docs/orchestrator/VALIDATION_DEBT.md`.
+## Handoff
+Record scope, files, commands, results, sensitive-data handling, blockers, and next owner action.
+## Project-Specific Operations
+Do not disclose MinIO secrets, S3 signatures, raw objects, or full production presigned URLs.

@@ -330,4 +330,21 @@ kubectl logs        -n statex-apps -l app=minio-microservice --tail=50
 * **Secrets:** if the pod starts then crashes on credentials, check the ExternalSecret
   synced (`kubectl get externalsecret -n statex-apps`); a sealed Vault breaks the sync.
 
-Then, on the portal side: `supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper` and `python3 scripts/verify_s3_records_upload.py`.
+Then, on the portal side: `supervisorctl -c /vagrant/setup/supervisord.conf restart records_s3_helper` and `python3 scripts/verify_s3_records_upload.py`.\n\n---\n\n# minio-microservice
+Private S3-compatible MinIO storage for lesson recordings and task artifacts.
+## Status
+Production service in `statex-apps`; canonical IPS adoption is validated.
+## Documentation Authority
+BUSINESS.md, approved constitution, vision, SYSTEM.md, and ips-adoption.json are authoritative.
+## Capabilities
+Private MinIO S3 storage, presigned GET access, console, and an authenticated read-only metadata wrapper.
+## Interfaces
+S3: 9000/9002; console: 9001/9003; production: `https://minio.alfares.cz`; wrapper health: `/healthz`.
+## Development
+Use existing scripts and safe S3 signature checks for storage, CORS, endpoint, or proxy changes.
+## Configuration
+Vault path `secret/prod/minio-microservice` is synchronized through External Secrets Operator; never commit credentials.
+## Deployment
+`./scripts/deploy.sh` deploys to `statex-apps` using upstream MinIO runtime images.
+## Health and Observability
+MinIO probes use `/minio/health/live`; wrapper probes use `/healthz` and wrapper events go to logging-microservice.

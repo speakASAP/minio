@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "profile": "runtime-service",
+  "project": {
+    "name": "minio-microservice",
+    "repository": "https://github.com/speakASAP/minio-microservice.git"
+  },
+  "standard": {
+    "repository": "https://github.com/speakASAP/intent-preservation-system",
+    "revision": "22c061cb5f4ff641bbdb90f10ad1e2072e04a9f2"
+  },
+  "artifacts": {
+    "readme": "README.md",
+    "business": "BUSINESS.md",
+    "system": "SYSTEM.md",
+    "agents": "AGENTS.md",
+    "operations": "AGENT_OPERATIONS.md",
+    "claude": "CLAUDE.md",
+    "tasks": "TASKS.md",
+    "state": "STATE.json",
+    "constitution": "docs/00_constitution/CONSTITUTION.md",
+    "vision": "docs/01_vision/VISION.md",
+    "integrationContract": "docs/06_architecture/INTEGRATION_CONTRACT.md",
+    "projectInvariants": "docs/17_governance/PROJECT_INVARIANTS.md",
+    "validationDebt": "docs/orchestrator/VALIDATION_DEBT.md",
+    "bootstrapTask": "docs/11_tasks/TASK-001-bootstrap-service.md",
+    "bootstrapGoalImpact": "docs/22_goal_impact/GOAL-IMPACT-TASK-001.md",
+    "bootstrapExecutionPlan": "docs/21_execution_plans/EP-TASK-001-bootstrap-service.md",
+    "bootstrapValidation": "docs/12_validation/VAL-TASK-001-bootstrap-service.md"
+  },
+  "integrationReview": [
+    {
+      "capability": "auth",
+      "component": "auth-microservice",
+      "decision": "required",
+      "reason": "The admin metadata wrapper validates administrator bearer tokens.",
+      "contract": "Wrapper requests token validation before privileged metadata responses.",
+      "configuration": "AUTH_SERVICE_URL defaults to the in-cluster auth service URL.",
+      "failureMode": "Privileged requests are denied when validation cannot succeed.",
+      "validation": "Inspect sanitized wrapper token-validation behavior."
+    },
+    {
+      "capability": "postgres",
+      "component": "db-server-postgres",
+      "decision": "not-applicable",
+      "reason": "MinIO and its Python wrapper do not configure or use PostgreSQL."
+    },
+    {
+      "capability": "redis",
+      "component": "db-server-redis",
+      "decision": "not-applicable",
+      "reason": "MinIO and its Python wrapper do not configure or use Redis."
+    },
+    {
+      "capability": "logging",
+      "component": "logging-microservice",
+      "decision": "required",
+      "reason": "The admin wrapper emits structured operational logs.",
+      "contract": "The wrapper posts structured log events to the logging API.",
+      "configuration": "Logging URL and path are ConfigMap values; ingest token is secret-backed.",
+      "failureMode": "Delivery failure does not disclose secrets or make a failed operation successful.",
+      "validation": "Run the repository wrapper logging test with sanitized configuration."
+    },
+    {
+      "capability": "notifications",
+      "component": "notifications-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls notifications-microservice."
+    },
+    {
+      "capability": "ai",
+      "component": "ai-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls ai-microservice."
+    },
+    {
+      "capability": "payments",
+      "component": "payments-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls payments-microservice."
+    },
+    {
+      "capability": "catalog",
+      "component": "catalog-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls catalog-microservice."
+    },
+    {
+      "capability": "orders",
+      "component": "orders-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls orders-microservice."
+    },
+    {
+      "capability": "warehouse",
+      "component": "warehouse-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls warehouse-microservice."
+    },
+    {
+      "capability": "invoices",
+      "component": "invoices-microservice",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code calls invoices-microservice."
+    },
+    {
+      "capability": "object-storage",
+      "component": "minio-microservice",
+      "decision": "not-applicable",
+      "reason": "This service is the object-storage MinIO domain itself and does not consume another object-storage service as a client."
+    },
+    {
+      "capability": "event-bus",
+      "component": "RabbitMQ",
+      "decision": "not-applicable",
+      "reason": "No MinIO service or wrapper code publishes or consumes RabbitMQ events."
+    },
+    {
+      "capability": "docs-rag",
+      "component": "docs-rag-microservice",
+      "decision": "required",
+      "reason": "Project documentation must be discoverable through repository ingestion.",
+      "contract": "Docs-RAG indexes the Git repository directly.",
+      "configuration": "The repository is registered for ecosystem documentation retrieval.",
+      "failureMode": "Git documents remain authoritative when retrieval is unavailable.",
+      "validation": "Query a distinctive MinIO phrase and confirm repository path."
+    },
+    {
+      "capability": "monitoring",
+      "component": "monitoring-microservice",
+      "decision": "required",
+      "reason": "The production runtime must expose health evidence.",
+      "contract": "MinIO exposes /minio/health/live and the wrapper exposes /healthz.",
+      "configuration": "Kubernetes probes target these endpoints.",
+      "failureMode": "Unhealthy pods fail readiness or liveness probes.",
+      "validation": "Inspect probes and call health endpoints in an approved environment."
+    },
+    {
+      "capability": "backups",
+      "component": "backups-microservice",
+      "decision": "not-applicable",
+      "reason": "backups-microservice documents MinIO buckets as a future target type, but no implemented MinIO bucket backup integration is present."
+    }
+  ]
+}
