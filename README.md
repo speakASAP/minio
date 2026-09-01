@@ -186,12 +186,12 @@ The wrapper mounts `/srv/speakasap-records` read-only, does not use or return Mi
 
 ## Access
 
-* **From prod (speakasap-portal)**: HTTPS URL to dev MinIO via the public hostname (currently `https://minio.alfares.cz`, fronted by nginx-microservice) with credentials in env. Portal uses S3 SDK to PUT objects and generate presigned GET URLs.
+* **From prod (speakasap-portal)**: HTTPS URL to dev MinIO via the public hostname (currently `https://minio.alfares.cz`, fronted by Traefik ingress) with credentials in env. Portal uses S3 SDK to PUT objects and generate presigned GET URLs.
 * **Direct (dev only)**: `http://127.0.0.1:9000` (API), `http://127.0.0.1:9001` (Console). Keep MinIO bound to localhost.
 
 ## Security
 
-* MinIO listens on 127.0.0.1 only; external access is only via nginx-microservice / Cloudflare on `https://minio.alfares.cz`.
+* MinIO listens on 127.0.0.1 only; external access is only via Traefik ingress / Cloudflare on `https://minio.alfares.cz`.
 * Bucket `speakasap-records` is private; no anonymous read.
 * Presigned URL expiration ≤ 24 hours (configured in portal).
 * Store MINIO_ROOT_USER / MINIO_ROOT_PASSWORD and portal S3 keys in env only; never commit.
