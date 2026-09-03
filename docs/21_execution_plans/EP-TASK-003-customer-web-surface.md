@@ -2,11 +2,11 @@
 
 ```yaml
 id: EP-TASK-003
-status: implemented
+status: done
 source_task: ../11_tasks/TASK-003-customer-web-surface.md
 owner: minio-service-owner
 created: 2026-06-13
-last_updated: 2026-06-13
+last_updated: 2026-09-03
 completeness_level: complete
 vision: ../01_vision/VISION.md
 constitution: ../00_constitution/CONSTITUTION.md
@@ -15,6 +15,8 @@ goal_impact: ../22_goal_impact/GOAL-IMPACT-TASK-003.md
 ```
 
 ## Metadata
+Verified 2026-09-03: https://storage.alfares.cz returns HTTP 200 and serves the rendered `Alfares Object Storage` surface.
+
 Owner: minio-service-owner. Lifecycle state: implemented. Source task: `../11_tasks/TASK-003-customer-web-surface.md`.
 
 ## Upstream Traceability

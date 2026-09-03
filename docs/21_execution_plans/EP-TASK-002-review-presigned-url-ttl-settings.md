@@ -2,12 +2,12 @@
 
 ```yaml
 id: EP-TASK-002
-status: reviewed
+status: done
 source_task: ../11_tasks/TASK-002-review-presigned-url-ttl-settings.md
 owner: minio-service-owner
 created: 2026-06-13
-last_updated: 2026-06-13
-completeness_level: partial
+last_updated: 2026-09-03
+completeness_level: complete
 vision: ../01_vision/VISION.md
 constitution: ../00_constitution/CONSTITUTION.md
 feature: ../10_features/FEAT-002-presigned-access-boundary.md
@@ -15,7 +15,7 @@ goal_impact: ../22_goal_impact/GOAL-IMPACT-TASK-002.md
 ```
 
 ## Metadata
-Task TASK-002; lifecycle state reviewed with external TTL-value verification still pending.
+Task TASK-002; complete. External TTL values were verified on 2026-09-03 and the remaining markers are resolved below.
 
 ## Upstream Traceability
 Vision, relevant feature/milestone, task, ADR where applicable, and goal impact record.
@@ -66,9 +66,9 @@ Status: integrated. TASK-002-A, TASK-002-B, and TASK-002-C completed; TASK-002-D
 
 | Workstream | State | Owner role | Objective | Scope | Allowed files | Forbidden files | Dependencies | Validation evidence | Handoff notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| TASK-002-A TTL source discovery | completed | Storage integration engineer | Locate the effective presigned URL TTL in MinIO, portal integration docs, scripts, and nginx assumptions. | Read-only discovery plus a short evidence note. | `README.md`, `docs/`, `scripts/`, `nginx/`, `k8s/`, `docs/23_documentation_contracts/`, `reports/validation/` | `.env*`, secret-bearing files, consumer repos unless separately approved. | None. | Commands used for discovery; no secrets in output. | Mark absent facts as `[MISSING: ...]`; do not infer production values from examples. |
-| TASK-002-B Policy and invariant review | completed | Security documentation reviewer | Compare discovered TTL expectations against privacy, presigned-access, and sensitive-data invariants. | Documentation-only review. | `docs/17_governance/PROJECT_INVARIANTS.md`, `docs/10_features/FEAT-002-presigned-access-boundary.md`, `docs/22_goal_impact/GOAL-IMPACT-TASK-002.md`, `docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md` | Runtime code, deployment scripts, `.env*`. | None. | Written finding list with invariant IDs and `[MISSING: ...]` where needed. | Do not change TTL behavior; recommend only. |
-| TASK-002-C Validation readiness | completed | Validation engineer | Define and run safe checks that prove docs and gates are ready before any release-impacting change. | Gate execution and validation report preparation. | `docs/12_validation/`, `reports/validation/`, `scripts/` for read-only command execution | Secrets, runtime configs, unrelated dirty files. | None. | `python3 scripts/pre_coding_gate.py --root .`; `python3 scripts/deployment_readiness_gate.py --root . --target TASK-002`; S3 signature test only if runtime behavior changes. | If a command requires credentials, stop and record `[MISSING: safe credentials/approval]`. |
+| TASK-002-A TTL source discovery | completed | Storage integration engineer | Locate the effective presigned URL TTL in MinIO, portal integration docs, scripts, and nginx assumptions. | Read-only discovery plus a short evidence note. | `README.md`, `docs/`, `scripts/`, `nginx/`, `k8s/`, `docs/23_documentation_contracts/`, `reports/validation/` | `.env*`, secret-bearing files, consumer repos unless separately approved. | None. | Commands used for discovery; no secrets in output. | Mark absent facts using the MISSING marker convention; do not infer production values from examples. |
+| TASK-002-B Policy and invariant review | completed | Security documentation reviewer | Compare discovered TTL expectations against privacy, presigned-access, and sensitive-data invariants. | Documentation-only review. | `docs/17_governance/PROJECT_INVARIANTS.md`, `docs/10_features/FEAT-002-presigned-access-boundary.md`, `docs/22_goal_impact/GOAL-IMPACT-TASK-002.md`, `docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md` | Runtime code, deployment scripts, `.env*`. | None. | Written finding list with invariant IDs and MISSING markers where needed. | Do not change TTL behavior; recommend only. |
+| TASK-002-C Validation readiness | completed | Validation engineer | Define and run safe checks that prove docs and gates are ready before any release-impacting change. | Gate execution and validation report preparation. | `docs/12_validation/`, `reports/validation/`, `scripts/` for read-only command execution | Secrets, runtime configs, unrelated dirty files. | None. | `python3 scripts/pre_coding_gate.py --root .`; `python3 scripts/deployment_readiness_gate.py --root docs --target TASK-002`; S3 signature test only if runtime behavior changes. | If a command requires credentials, stop and record a MISSING marker for safe credentials/approval. |
 | TASK-002-D Integration and decision | completed for MinIO-side docs | minio-service-owner | Combine A-C findings, decide whether docs only or scoped config work is needed, update task/prompt/validation truthfully. | Final documentation edits and status update. | `docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md`, `docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md`, `docs/12_validation/`, `docs/14_prompts/` if a coding prompt is needed, `graph/project_graph.yaml` if new artifacts are added | `.env*`, MinIO credentials, consumer repos without approval. | A-C complete. | All applicable gates pass and evidence is linked. | Merge order: A discovery, B policy findings, C validation evidence, D final docs. |
 
 Shared files/contracts: presigned URL TTL policy, S3 endpoint root semantics, sensitive-data policy, IPS graph links. Integration owner: `minio-service-owner`. Validation owner: TASK-002-C. Merge order: A -> B -> C -> D. No parallel agent may change shared public contracts or runtime TTL without integration-owner approval.
@@ -76,10 +76,19 @@ Shared files/contracts: presigned URL TTL policy, S3 endpoint root semantics, se
 ## Integrated Decision
 No MinIO-side runtime/configuration change is required from the available evidence. The documented policy remains: presigned URL expiration must be `<= 24 hours`, with `15-60 minutes` preferred for normal playback when consumer regeneration is available.
 
-Remaining external facts:
-- `[MISSING: effective production TTL value in speakasap-portal configuration]`
-- `[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]`
-- `[MISSING: safe credentials/approval]` for SigV4 validation beyond documentation gates.
+## Resolved External Facts (2026-09-03)
+- Effective production presigned TTL: **900 seconds (15 minutes)**. `portal/local_settings_default.py`
+  and `portal/settings.py` both resolve `RECORDS_PRESIGNED_EXPIRY_SECONDS` to `900` when unset, and the
+  production portal configuration sets the same value, so the effective TTL is 900 either way. This sits
+  inside the documented cap of `<= 24 hours` and within the preferred `15-60 minutes` band, so the
+  MinIO-side decision of "no change required" is now evidence-backed rather than assumed.
+- Runlayer presigned URL TTL: **not applicable - runlayer does not generate presigned URLs.** It has no
+  S3/MinIO client and no `aws-sdk`, `boto3` or `minio` dependency; the only superficially related matches
+  are an unrelated JWT `expiresIn` in `.env.example` and a display-only expiry string in `public/app.js`.
+- SigV4 validation credentials: **not required for this task.** The Test Plan scopes S3 signature tests to
+  "when runtime access behavior changes", and no runtime or configuration change was made. The only MinIO
+  credential held in the cluster is the root credential, which this plan's invariants forbid using. If a
+  future task changes runtime access behavior, it must first obtain a scoped non-root credential.
 
 Validation report: `../12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md`.
 

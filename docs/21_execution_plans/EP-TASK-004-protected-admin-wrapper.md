@@ -2,11 +2,11 @@
 
 ```yaml
 id: EP-TASK-004
-status: implemented
+status: done
 source_task: ../11_tasks/TASK-004-protected-admin-wrapper.md
 owner: minio-service-owner
 created: 2026-06-15
-last_updated: 2026-06-15
+last_updated: 2026-09-03
 completeness_level: partial
 vision: ../01_vision/VISION.md
 constitution: ../00_constitution/CONSTITUTION.md
@@ -15,6 +15,8 @@ goal_impact: ../22_goal_impact/GOAL-IMPACT-TASK-004.md
 ```
 
 ## Metadata
+Verified 2026-09-03: in-cluster `/healthz` returns 200 with `bucketConfigured: true`, and `/api/admin/summary` and `/api/admin/objects` both return 401 `missing_bearer_token`, proving the protection invariant holds.
+
 Task TASK-004; lifecycle state implemented for the read-only backend-wrapper slice.
 
 ## Upstream Traceability

@@ -8,12 +8,12 @@
     "deployment": "kubernetes"
   },
   "planning": {
-    "status": "done",
+    "status": "completed-frozen",
     "active_goal_ids": [],
     "next_ready_goal_ids": [],
     "blocked_goal_ids": [],
     "active_workstream_ids": [],
-    "last_updated_at": "2026-06-21T00:00:00Z"
+    "last_updated_at": "2026-09-03T00:00:00Z"
   },
   "delivery": {
     "last_validation_id": "VAL-WAVE0-MINIO-2026-08-31",
@@ -24,6 +24,6 @@
   "collection": {
     "profile": "service",
     "artifact_index": "docs/registry/ARTIFACT_INDEX.json",
-    "status_source": "TASKS.md completion marker and repository-local Wave 0 validation evidence"
+    "status_source": "TASKS.md completion marker; all four execution plans verified against production 2026-09-03 (storage.alfares.cz 200, admin wrapper /healthz 200 with 401 on admin routes, portal presigned TTL 900s)"
   }
 }
