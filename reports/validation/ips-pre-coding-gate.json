@@ -1,8 +1,9 @@
 {
-  "created_at": "2026-06-15T10:36:22Z",
+  "created_at": "2026-09-03T12:41:02Z",
   "execution_plans": {
-    "execution_plan_count": 4,
+    "execution_plan_count": 5,
     "execution_plan_files": [
+      "docs/21_execution_plans/EP-TASK-001-bootstrap-service.md",
       "docs/21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md",
       "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md",
       "docs/21_execution_plans/EP-TASK-003-customer-web-surface.md",
@@ -32,8 +33,9 @@
   "status": "pass",
   "tasks": {
     "missing_upstream_traceability": [],
-    "task_count": 4,
+    "task_count": 5,
     "task_files": [
+      "docs/11_tasks/TASK-001-bootstrap-service.md",
       "docs/11_tasks/TASK-001-ips-documentation-bootstrap.md",
       "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md",
       "docs/11_tasks/TASK-003-customer-web-surface.md",

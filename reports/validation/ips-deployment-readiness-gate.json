@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-06-15T10:36:22Z",
+  "created_at": "2026-09-03T12:41:02Z",
   "gate": "deployment_readiness",
-  "next_step": "ready_for_deployment_review",
+  "next_step": "fix_deployment_readiness_findings",
   "pre_coding_gate": {
     "report_path": "reports/validation/ips-pre-coding-gate.json",
     "status": "pass"
@@ -13,88 +13,38 @@
   },
   "root": "/home/ssf/Documents/Github/minio-microservice",
   "schema_version": "1.0.0",
-  "status": "pass",
+  "status": "fail",
   "strict_doc_audit": {
-    "findings_count": 0,
-    "score": 100,
-    "status": "PASS"
+    "findings_count": 88,
+    "score": 0,
+    "status": "FAIL"
   },
-  "target": "TASK-004",
+  "target": null,
   "unresolved_markers": [
     {
-      "line": 56,
-      "marker": "[MISSING: effective TTL source]",
-      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 58,
-      "marker": "[MISSING: safe credentials/approval]",
-      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 65,
-      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 66,
-      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 67,
-      "marker": "[MISSING: safe credentials/approval]",
-      "path": "docs/11_tasks/TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 72,
-      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 73,
-      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 74,
-      "marker": "[MISSING: safe credentials/approval]",
-      "path": "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 69,
+      "line": 96,
       "marker": "[MISSING: ...]",
-      "path": "docs/21_execution_plans/EP-TASK-001-ips-documentation-bootstrap.md"
+      "path": ".github/skills/register-new-app/SKILL.md"
     },
     {
-      "line": 69,
+      "line": 127,
       "marker": "[MISSING: ...]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": ".github/skills/register-new-app/SKILL.md"
     },
     {
-      "line": 70,
+      "line": 127,
+      "marker": "[UNKNOWN: ...]",
+      "path": ".github/skills/register-new-app/SKILL.md"
+    },
+    {
+      "line": 60,
       "marker": "[MISSING: ...]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "path": "AGENT_OPERATIONS.md"
     },
     {
-      "line": 71,
-      "marker": "[MISSING: safe credentials/approval]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 80,
-      "marker": "[MISSING: effective production TTL value in speakasap-portal configuration]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 81,
-      "marker": "[MISSING: effective TTL configured for runlayer artifact access, if runlayer generates presigned URLs]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
-    },
-    {
-      "line": 82,
-      "marker": "[MISSING: safe credentials/approval]",
-      "path": "docs/21_execution_plans/EP-TASK-002-review-presigned-url-ttl-settings.md"
+      "line": 60,
+      "marker": "[UNKNOWN: ...]",
+      "path": "AGENT_OPERATIONS.md"
     },
     {
       "line": 16,
@@ -152,27 +102,25 @@
       "path": "docs/23_documentation_contracts/DOCUMENTATION_COMPLETENESS_STANDARD.md"
     },
     {
-      "line": 60,
-      "marker": "[MISSING: ...]",
-      "path": "AGENT_OPERATIONS.md"
+      "line": 41,
+      "marker": "[MISSING: whether Marketing currently stores campaign assets in MinIO]",
+      "path": "docs/business-process-control-plane/HOLIDAY_DISCOUNT_ADOPTION.md"
     },
     {
-      "line": 60,
-      "marker": "[UNKNOWN: ...]",
-      "path": "AGENT_OPERATIONS.md"
+      "line": 41,
+      "marker": "[MISSING: ...]",
+      "path": "docs/orchestrator/VALIDATION_DEBT.md"
     }
   ],
   "validation_reports": {
-    "matching_reports": [
-      "docs/12_validation/VAL-TASK-004-protected-admin-wrapper.md"
-    ],
     "reports": [
+      "docs/12_validation/VAL-TASK-001-bootstrap-service.md",
       "docs/12_validation/VAL-TASK-001-ips-documentation-bootstrap.md",
       "docs/12_validation/VAL-TASK-002-review-presigned-url-ttl-settings.md",
       "docs/12_validation/VAL-TASK-003-customer-web-surface.md",
       "docs/12_validation/VAL-TASK-004-protected-admin-wrapper.md"
     ],
     "status": "pass",
-    "target": "TASK-004"
+    "target": null
   }
 }
