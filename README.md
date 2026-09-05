@@ -171,6 +171,8 @@ Current endpoints:
 
 The wrapper mounts `/srv/speakasap-records` read-only, does not use or return MinIO root credentials, does not stream object bodies, does not generate presigned URLs, and does not mutate buckets or credentials. Mutation and credential issuance require a separate traced task and validation plan.
 
+Any service caller follows the [canonical service identity standard](../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md).
+
 ## Configuration
 
 * `.env.example`: keys only (MINIO_ROOT_USER, MINIO_ROOT_PASSWORD, RECORDS_BUCKET, etc.).
