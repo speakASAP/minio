@@ -54,8 +54,8 @@ spec:
             - name: LOGGING_SERVICE_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: logging-ingest-credentials
-                  key: LOGGING_SERVICE_TOKEN
+                  name: minio-microservice-secret
+                  key: ADMIN_API_LOGGING_SERVICE_TOKEN
             - name: ADMIN_API_ALLOWED_ORIGIN
               value: "https://storage.alfares.cz"
           readinessProbe:
