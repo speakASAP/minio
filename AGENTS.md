@@ -32,6 +32,10 @@ None.\n\n---\n\n# AGENTS.md: minio-microservice
 Read BUSINESS.md, SYSTEM.md, constitution, vision, invariants, TASKS.md, and STATE.json before work.
 ## Authority
 Owner-approved protected intent is authoritative; central adoption standard is in intent-preservation-system.
+
+## Service-to-service authentication
+For machine service identity, follow the sole canonical [`SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md). It is not reproduced here.
+
 ## Intent Preservation System
 Trace vision through goal impact, system, task, plan, implementation, and validation.
 ## Safety and Operations
