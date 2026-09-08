@@ -6,7 +6,7 @@ Describe deliberate ecosystem boundaries for private MinIO storage.
 ## Data Ownership
 MinIO owns object bytes and metadata. speakasap-portal owns lesson workflows; runlayer owns task-artifact workflows.
 ## Authentication and Authorization
-S3 credentials are managed outside Git. Admin metadata needs a bearer token validated by auth-microservice; anonymous reads are forbidden.
+S3 credentials are managed outside Git. Admin metadata needs a bearer token validated by auth-microservice. Machine callers use [`SERVICE_IDENTITY_CONSUMER_STANDARD.md`](../../../auth-microservice/docs/SERVICE_IDENTITY_CONSUMER_STANDARD.md); anonymous reads are forbidden.
 ## Synchronous Dependencies
 The wrapper calls AUTH_SERVICE_URL and posts to LOGGING_SERVICE_URL at LOGGING_SERVICE_API_PATH.
 ## Asynchronous Dependencies
